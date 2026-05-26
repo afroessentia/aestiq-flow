@@ -9,38 +9,171 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RetornosRouteImport } from './routes/retornos'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ClientesRouteImport } from './routes/clientes'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientesIdRouteImport } from './routes/clientes.$id'
+import { Route as AgendamentosNovoRouteImport } from './routes/agendamentos.novo'
+import { Route as ClientesIdProcedimentoRouteImport } from './routes/clientes.$id.procedimento'
+import { Route as ClientesIdAnamneseRouteImport } from './routes/clientes.$id.anamnese'
 
+const RetornosRoute = RetornosRouteImport.update({
+  id: '/retornos',
+  path: '/retornos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientesRoute = ClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientesIdRoute = ClientesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ClientesRoute,
+} as any)
+const AgendamentosNovoRoute = AgendamentosNovoRouteImport.update({
+  id: '/agendamentos/novo',
+  path: '/agendamentos/novo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientesIdProcedimentoRoute = ClientesIdProcedimentoRouteImport.update({
+  id: '/procedimento',
+  path: '/procedimento',
+  getParentRoute: () => ClientesIdRoute,
+} as any)
+const ClientesIdAnamneseRoute = ClientesIdAnamneseRouteImport.update({
+  id: '/anamnese',
+  path: '/anamnese',
+  getParentRoute: () => ClientesIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/clientes': typeof ClientesRouteWithChildren
+  '/login': typeof LoginRoute
+  '/retornos': typeof RetornosRoute
+  '/agendamentos/novo': typeof AgendamentosNovoRoute
+  '/clientes/$id': typeof ClientesIdRouteWithChildren
+  '/clientes/$id/anamnese': typeof ClientesIdAnamneseRoute
+  '/clientes/$id/procedimento': typeof ClientesIdProcedimentoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/clientes': typeof ClientesRouteWithChildren
+  '/login': typeof LoginRoute
+  '/retornos': typeof RetornosRoute
+  '/agendamentos/novo': typeof AgendamentosNovoRoute
+  '/clientes/$id': typeof ClientesIdRouteWithChildren
+  '/clientes/$id/anamnese': typeof ClientesIdAnamneseRoute
+  '/clientes/$id/procedimento': typeof ClientesIdProcedimentoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/clientes': typeof ClientesRouteWithChildren
+  '/login': typeof LoginRoute
+  '/retornos': typeof RetornosRoute
+  '/agendamentos/novo': typeof AgendamentosNovoRoute
+  '/clientes/$id': typeof ClientesIdRouteWithChildren
+  '/clientes/$id/anamnese': typeof ClientesIdAnamneseRoute
+  '/clientes/$id/procedimento': typeof ClientesIdProcedimentoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/agenda'
+    | '/clientes'
+    | '/login'
+    | '/retornos'
+    | '/agendamentos/novo'
+    | '/clientes/$id'
+    | '/clientes/$id/anamnese'
+    | '/clientes/$id/procedimento'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/agenda'
+    | '/clientes'
+    | '/login'
+    | '/retornos'
+    | '/agendamentos/novo'
+    | '/clientes/$id'
+    | '/clientes/$id/anamnese'
+    | '/clientes/$id/procedimento'
+  id:
+    | '__root__'
+    | '/'
+    | '/agenda'
+    | '/clientes'
+    | '/login'
+    | '/retornos'
+    | '/agendamentos/novo'
+    | '/clientes/$id'
+    | '/clientes/$id/anamnese'
+    | '/clientes/$id/procedimento'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRoute
+  ClientesRoute: typeof ClientesRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  RetornosRoute: typeof RetornosRoute
+  AgendamentosNovoRoute: typeof AgendamentosNovoRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/retornos': {
+      id: '/retornos'
+      path: '/retornos'
+      fullPath: '/retornos'
+      preLoaderRoute: typeof RetornosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clientes': {
+      id: '/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof ClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +181,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clientes/$id': {
+      id: '/clientes/$id'
+      path: '/$id'
+      fullPath: '/clientes/$id'
+      preLoaderRoute: typeof ClientesIdRouteImport
+      parentRoute: typeof ClientesRoute
+    }
+    '/agendamentos/novo': {
+      id: '/agendamentos/novo'
+      path: '/agendamentos/novo'
+      fullPath: '/agendamentos/novo'
+      preLoaderRoute: typeof AgendamentosNovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clientes/$id/procedimento': {
+      id: '/clientes/$id/procedimento'
+      path: '/procedimento'
+      fullPath: '/clientes/$id/procedimento'
+      preLoaderRoute: typeof ClientesIdProcedimentoRouteImport
+      parentRoute: typeof ClientesIdRoute
+    }
+    '/clientes/$id/anamnese': {
+      id: '/clientes/$id/anamnese'
+      path: '/anamnese'
+      fullPath: '/clientes/$id/anamnese'
+      preLoaderRoute: typeof ClientesIdAnamneseRouteImport
+      parentRoute: typeof ClientesIdRoute
+    }
   }
 }
 
+interface ClientesIdRouteChildren {
+  ClientesIdAnamneseRoute: typeof ClientesIdAnamneseRoute
+  ClientesIdProcedimentoRoute: typeof ClientesIdProcedimentoRoute
+}
+
+const ClientesIdRouteChildren: ClientesIdRouteChildren = {
+  ClientesIdAnamneseRoute: ClientesIdAnamneseRoute,
+  ClientesIdProcedimentoRoute: ClientesIdProcedimentoRoute,
+}
+
+const ClientesIdRouteWithChildren = ClientesIdRoute._addFileChildren(
+  ClientesIdRouteChildren,
+)
+
+interface ClientesRouteChildren {
+  ClientesIdRoute: typeof ClientesIdRouteWithChildren
+}
+
+const ClientesRouteChildren: ClientesRouteChildren = {
+  ClientesIdRoute: ClientesIdRouteWithChildren,
+}
+
+const ClientesRouteWithChildren = ClientesRoute._addFileChildren(
+  ClientesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRoute,
+  ClientesRoute: ClientesRouteWithChildren,
+  LoginRoute: LoginRoute,
+  RetornosRoute: RetornosRoute,
+  AgendamentosNovoRoute: AgendamentosNovoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
