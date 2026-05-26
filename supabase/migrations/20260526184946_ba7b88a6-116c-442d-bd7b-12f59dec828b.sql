@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "public_read_photos" ON storage.objects;
