@@ -48,12 +48,14 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-background flex flex-col">
+    <div className="min-h-dvh flex flex-col" style={{ backgroundColor: "#FAFAF9" }}>
       <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
         <div className="mb-10 text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary text-primary-foreground font-extrabold text-2xl mb-4">
-            A
-          </div>
+          <img
+            src={logoAestiq}
+            alt="AESTIQ"
+            className="w-24 h-24 mx-auto mb-4 object-contain"
+          />
           <h1 className="text-3xl font-bold tracking-tight text-dark">AESTIQ</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Gestão para clínicas de estética avançada
