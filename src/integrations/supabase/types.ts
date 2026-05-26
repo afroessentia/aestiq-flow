@@ -14,7 +14,207 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      anamnesis: {
+        Row: {
+          allergies: string | null
+          chronic_diseases: string | null
+          client_id: string
+          consent_at: string | null
+          consent_lgpd: boolean
+          created_at: string
+          id: string
+          keloid_history: boolean
+          medications: string | null
+          pregnancy_breastfeeding: boolean
+          procedure_history: string | null
+          skin_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: string | null
+          chronic_diseases?: string | null
+          client_id: string
+          consent_at?: string | null
+          consent_lgpd?: boolean
+          created_at?: string
+          id?: string
+          keloid_history?: boolean
+          medications?: string | null
+          pregnancy_breastfeeding?: boolean
+          procedure_history?: string | null
+          skin_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allergies?: string | null
+          chronic_diseases?: string | null
+          client_id?: string
+          consent_at?: string | null
+          consent_lgpd?: boolean
+          created_at?: string
+          id?: string
+          keloid_history?: boolean
+          medications?: string | null
+          pregnancy_breastfeeding?: boolean
+          procedure_history?: string | null
+          skin_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnesis_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          client_id: string | null
+          client_name: string
+          created_at: string
+          date: string
+          deposit_amount: number | null
+          id: string
+          notes: string | null
+          procedure: string
+          status: string
+          time: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          client_name: string
+          created_at?: string
+          date: string
+          deposit_amount?: number | null
+          id?: string
+          notes?: string | null
+          procedure: string
+          status?: string
+          time: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          client_name?: string
+          created_at?: string
+          date?: string
+          deposit_amount?: number | null
+          id?: string
+          notes?: string | null
+          procedure?: string
+          status?: string
+          time?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      procedures: {
+        Row: {
+          after_photo: string | null
+          before_photo: string | null
+          client_id: string
+          created_at: string
+          date: string
+          days_until_return: number
+          id: string
+          notes: string | null
+          procedure: string
+          product_lot: string | null
+          return_date: string | null
+          return_done: boolean
+          user_id: string
+        }
+        Insert: {
+          after_photo?: string | null
+          before_photo?: string | null
+          client_id: string
+          created_at?: string
+          date: string
+          days_until_return?: number
+          id?: string
+          notes?: string | null
+          procedure: string
+          product_lot?: string | null
+          return_date?: string | null
+          return_done?: boolean
+          user_id: string
+        }
+        Update: {
+          after_photo?: string | null
+          before_photo?: string | null
+          client_id?: string
+          created_at?: string
+          date?: string
+          days_until_return?: number
+          id?: string
+          notes?: string | null
+          procedure?: string
+          product_lot?: string | null
+          return_date?: string | null
+          return_done?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procedures_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
