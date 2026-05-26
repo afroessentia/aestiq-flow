@@ -85,6 +85,28 @@ function LoginPage() {
             />
           </Field>
 
+          <div className="flex justify-end -mt-2">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!email) {
+                  toast.error("Informe seu e-mail para redefinir a senha");
+                  return;
+                }
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                  redirectTo: window.location.origin,
+                });
+                if (error) toast.error(error.message);
+                else toast.success("E-mail de redefinição enviado");
+              }}
+              className="text-xs font-medium hover:underline"
+              style={{ color: "#2A9D8F" }}
+            >
+              Esqueceu sua senha?
+            </button>
+          </div>
+
+
           <Button type="submit" full disabled={busy}>
             {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
           </Button>
