@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button, Input, Field } from "@/components/u";
 import { toast } from "sonner";
+import logoAestiq from "@/assets/logo-aestiq.svg";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
