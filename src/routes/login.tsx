@@ -1,0 +1,100 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { Button, Input, Field } from "@/components/u";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/login")({
+  component: LoginPage,
+});
+
+function LoginPage() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) navigate({ to: "/" });
+  }, [user, loading, navigate]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      if (mode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        toast.success("Bem-vinda de volta!");
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (error) throw error;
+        toast.success("Cadastro realizado!");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erro ao autenticar";
+      toast.error(msg.includes("Invalid") ? "Credenciais inválidas" : msg);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="min-h-dvh bg-background flex flex-col">
+      <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
+        <div className="mb-10 text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary text-primary-foreground font-extrabold text-2xl mb-4">
+            A
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-dark">AESTIQ</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gestão para clínicas de estética avançada
+          </p>
+        </div>
+
+        <form onSubmit={submit} className="space-y-4">
+          <Field label="E-mail">
+            <Input
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+            />
+          </Field>
+          <Field label="Senha">
+            <Input
+              type="password"
+              required
+              minLength={6}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </Field>
+
+          <Button type="submit" full disabled={busy}>
+            {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => setMode(mode === "login" ? "signup" : "login")}
+            className="block w-full text-sm text-muted-foreground py-2"
+          >
+            {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
