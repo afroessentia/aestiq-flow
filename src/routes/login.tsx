@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button, Input, Field } from "@/components/u";
 import { toast } from "sonner";
+import logoAestiq from "@/assets/logo-aestiq.svg";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -47,12 +48,14 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-background flex flex-col">
+    <div className="min-h-dvh flex flex-col" style={{ backgroundColor: "#FAFAF9" }}>
       <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
         <div className="mb-10 text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary text-primary-foreground font-extrabold text-2xl mb-4">
-            A
-          </div>
+          <img
+            src={logoAestiq}
+            alt="AESTIQ"
+            className="w-24 h-24 mx-auto mb-4 object-contain"
+          />
           <h1 className="text-3xl font-bold tracking-tight text-dark">AESTIQ</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Gestão para clínicas de estética avançada
@@ -81,6 +84,28 @@ function LoginPage() {
               placeholder="••••••••"
             />
           </Field>
+
+          <div className="flex justify-end -mt-2">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!email) {
+                  toast.error("Informe seu e-mail para redefinir a senha");
+                  return;
+                }
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                  redirectTo: window.location.origin,
+                });
+                if (error) toast.error(error.message);
+                else toast.success("E-mail de redefinição enviado");
+              }}
+              className="text-xs font-medium hover:underline"
+              style={{ color: "#2A9D8F" }}
+            >
+              Esqueceu sua senha?
+            </button>
+          </div>
+
 
           <Button type="submit" full disabled={busy}>
             {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
