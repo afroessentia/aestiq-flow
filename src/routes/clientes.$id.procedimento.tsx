@@ -19,6 +19,7 @@ function NovoProc() {
   const [busy, setBusy] = useState(false);
   const [date, setDate] = useState(todayISO());
   const [procedure, setProcedure] = useState("");
+  const [product, setProduct] = useState("");
   const [units, setUnits] = useState<string>("");
   const [product_lot, setLot] = useState("");
   const [expiration, setExpiration] = useState("");
@@ -49,6 +50,7 @@ function NovoProc() {
       const { error } = await supabase.from("procedures").insert({
         user_id: user.id, client_id: id,
         date, procedure,
+        product: product || null,
         product_lot: product_lot || null,
         units: units ? Number(units) : null,
         expiration_date: expiration || null,
