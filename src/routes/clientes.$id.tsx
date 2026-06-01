@@ -3,9 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, FileText, Plus, MessageCircle, Camera, Save, Trash2, X } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, EmptyState, Field, Input, Label, SectionTitle, Textarea } from "@/components/u";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { fmtDate, fmtDateTime, initials, waLink } from "@/lib/format";
+import { fmtDate, fmtDateTime, initials, todayISO, waLink } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/clientes/$id")({
@@ -57,6 +58,7 @@ function ClientePage() {
   const [showAddPair, setShowAddPair] = useState(false);
   const [newBefore, setNewBefore] = useState<File | null>(null);
   const [newAfter, setNewAfter] = useState<File | null>(null);
+  const [showNewSession, setShowNewSession] = useState(false);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const reloadProcs = async () => {
@@ -268,14 +270,11 @@ function ClientePage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 mt-4">
+          <div className="mt-4">
             <Link to="/clientes/$id/anamnese" params={{ id }}>
               <Button variant={hasAnamnesis ? "secondary" : "dark"} full size="md">
                 <FileText className="w-4 h-4" /> Anamnese
               </Button>
-            </Link>
-            <Link to="/clientes/$id/procedimento" params={{ id }}>
-              <Button full size="md"><Plus className="w-4 h-4" /> Sessão</Button>
             </Link>
           </div>
         </section>
@@ -400,8 +399,8 @@ function ClientePage() {
         <section>
           <SectionTitle
             action={
-              <Link to="/clientes/$id/procedimento" params={{ id }}
-                    className="text-xs font-semibold text-primary">+ Nova sessão</Link>
+              <button onClick={() => setShowNewSession(true)}
+                      className="text-xs font-semibold text-primary">+ Nova sessão</button>
             }
           >
             Histórico de sessões
@@ -412,7 +411,7 @@ function ClientePage() {
           ) : (
             <div className="space-y-2">
               {procs.map(p => {
-                const thumb = thumbs[p.id]?.after || thumbs[p.id]?.before;
+                const thumb = thumbs[p.id]?.before;
                 return (
                   <Link key={p.id} to="/clientes/$id/sessoes/$sid" params={{ id, sid: p.id }}>
                     <Card className="flex gap-3 active:bg-surface">
@@ -436,7 +435,100 @@ function ClientePage() {
           )}
         </section>
       </main>
+
+      <NewSessionDialog
+        open={showNewSession}
+        onClose={() => setShowNewSession(false)}
+        onSaved={async () => { setShowNewSession(false); await reloadProcs(); }}
+        clientId={id}
+        userId={user?.id ?? null}
+      />
     </div>
+  );
+}
+
+function NewSessionDialog({
+  open, onClose, onSaved, clientId, userId,
+}: {
+  open: boolean; onClose: () => void; onSaved: () => void;
+  clientId: string; userId: string | null;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [procedure, setProcedure] = useState("");
+  const [product, setProduct] = useState("");
+  const [units, setUnits] = useState("");
+  const [lot, setLot] = useState("");
+  const [expiration, setExpiration] = useState("");
+  const [zone, setZone] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const reset = () => {
+    setProcedure(""); setProduct(""); setUnits(""); setLot("");
+    setExpiration(""); setZone(""); setNotes("");
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+    if (!procedure.trim()) return toast.error("Informe o procedimento");
+    setBusy(true);
+    const { error } = await supabase.from("procedures").insert({
+      user_id: userId, client_id: clientId,
+      date: todayISO(),
+      procedure: procedure.trim(),
+      product: product || null,
+      units: units ? Number(units) : null,
+      product_lot: lot || null,
+      expiration_date: expiration || null,
+      application_zone: zone || null,
+      notes: notes || null,
+      days_until_return: 15,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Sessão registrada!");
+    reset();
+    onSaved();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Nova sessão</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          <Field label="Nome do procedimento">
+            <Input required value={procedure} onChange={(e) => setProcedure(e.target.value)} placeholder="Ex: Toxina Botulínica" />
+          </Field>
+          <Field label="Produto utilizado">
+            <Input value={product} onChange={(e) => setProduct(e.target.value)} placeholder="Ex: Botox Allergan" />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Unidades aplicadas">
+              <Input type="number" min={0} value={units} onChange={(e) => setUnits(e.target.value)} placeholder="Ex: 30" />
+            </Field>
+            <Field label="Zona de aplicação">
+              <Input value={zone} onChange={(e) => setZone(e.target.value)} placeholder="Ex: Glabela" />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Lote">
+              <Input value={lot} onChange={(e) => setLot(e.target.value)} placeholder="Nº do lote" />
+            </Field>
+            <Field label="Validade">
+              <Input type="date" value={expiration} onChange={(e) => setExpiration(e.target.value)} />
+            </Field>
+          </div>
+          <Field label="Observações">
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </Field>
+          <Button type="submit" full disabled={busy}>
+            <Save className="w-4 h-4" /> {busy ? "Salvando..." : "Salvar sessão"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
