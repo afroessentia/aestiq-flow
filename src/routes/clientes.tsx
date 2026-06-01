@@ -33,6 +33,9 @@ function ClientesPage() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [q]);
 
+  if (childMatches.length > 0) return <Outlet />;
+
+
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
