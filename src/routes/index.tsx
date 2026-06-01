@@ -20,6 +20,15 @@ interface Appt { id: string; client_name: string; procedure: string; time: strin
 interface Ret { id: string; procedure: string; return_date: string; clients: { id: string; name: string; phone: string | null } | null; }
 
 function Dashboard() {
+  const { user } = useAuth();
+  const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+  const rawName =
+    (meta.full_name as string | undefined) ||
+    (meta.name as string | undefined) ||
+    (meta.first_name as string | undefined) ||
+    "";
+  const firstName = rawName.trim().split(/\s+/)[0] || "";
+  const greeting = firstName ? `Olá, ${firstName} 👋` : "Olá 👋";
   const [appts, setAppts] = useState<Appt[]>([]);
   const [returns, setReturns] = useState<Ret[]>([]);
   const [loading, setLoading] = useState(true);
