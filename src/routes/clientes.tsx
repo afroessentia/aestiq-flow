@@ -17,8 +17,8 @@ interface Client { id: string; name: string; phone: string | null; email: string
 
 function ClientesPage() {
   const childMatches = useChildMatches();
-  if (childMatches.length > 0) return <Outlet />;
   const { user } = useAuth();
+  const [q, setQ] = useState("");
   const [items, setItems] = useState<Client[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
