@@ -5,6 +5,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, SectionTitle } from "@/components/u";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { fmtDate, fmtTime, todayISO, waLink } from "@/lib/format";
 
 export const Route = createFileRoute("/")({
