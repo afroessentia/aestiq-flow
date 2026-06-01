@@ -270,14 +270,11 @@ function ClientePage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 mt-4">
+          <div className="mt-4">
             <Link to="/clientes/$id/anamnese" params={{ id }}>
               <Button variant={hasAnamnesis ? "secondary" : "dark"} full size="md">
                 <FileText className="w-4 h-4" /> Anamnese
               </Button>
-            </Link>
-            <Link to="/clientes/$id/procedimento" params={{ id }}>
-              <Button full size="md"><Plus className="w-4 h-4" /> Sessão</Button>
             </Link>
           </div>
         </section>
