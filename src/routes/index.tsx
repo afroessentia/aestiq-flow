@@ -57,7 +57,7 @@ function Dashboard() {
     <AppShell title="AESTIQ">
       <div className="mb-5">
         <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</p>
-        <h2 className="text-2xl font-bold text-dark mt-0.5">Olá 👋</h2>
+        <h2 className="text-2xl font-bold text-dark mt-0.5">{greeting}</h2>
       </div>
 
       <Link to="/agendamentos/novo" className="block mb-6">
