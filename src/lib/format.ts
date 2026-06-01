@@ -25,8 +25,19 @@ export const addDaysISO = (iso: string, days: number) => {
 
 export const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
+export const formatWhatsAppNumber = (phone: string, defaultCountryCode = "55") => {
+  const trimmed = (phone || "").trim();
+  const digits = onlyDigits(trimmed);
+  if (!digits) return "";
+  // If user explicitly provided a country code with '+', trust the digits.
+  if (trimmed.startsWith("+")) return digits;
+  // Brazilian local numbers are 10 or 11 digits (DDD + number). Prepend default code.
+  if (digits.length <= 11) return `${defaultCountryCode}${digits}`;
+  return digits;
+};
+
 export const waLink = (phone: string, message: string) =>
-  `https://wa.me/${onlyDigits(phone)}?text=${encodeURIComponent(message)}`;
+  `https://wa.me/${formatWhatsAppNumber(phone)}?text=${encodeURIComponent(message)}`;
 
 export const initials = (name: string) =>
   name.split(" ").filter(Boolean).slice(0, 2).map(p => p[0]?.toUpperCase()).join("");
