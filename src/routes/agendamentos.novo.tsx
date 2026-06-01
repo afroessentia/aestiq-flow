@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Copy } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, Copy, ChevronDown, Search as SearchIcon } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, Field, Input, Textarea } from "@/components/u";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,11 +23,28 @@ const PIX_KEY = "contato@aestiq.com.br";
 const MERCHANT = "AESTIQ ESTETICA";
 const CITY = "SAO PAULO";
 
+const PROCEDURES = [
+  "Toxina Botulínica",
+  "Preenchimento Labial",
+  "Preenchimento Malar",
+  "Bioestimulador de Colágeno",
+  "Skinbooster",
+  "Peeling Químico",
+  "Limpeza de Pele",
+];
+
+interface ClientRow { id: string; name: string }
+
 function NewAppt() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const search = Route.useSearch();
+  const [clientId, setClientId] = useState("");
   const [client_name, setName] = useState("");
+  const [clientQuery, setClientQuery] = useState("");
+  const [clientOpen, setClientOpen] = useState(false);
+  const [clients, setClients] = useState<ClientRow[]>([]);
+  const clientBoxRef = useRef<HTMLDivElement>(null);
   const [procedure, setProc] = useState("");
   const [date, setDate] = useState(search.date ?? todayISO());
   const [time, setTime] = useState(search.time ?? "09:00");
@@ -35,18 +52,51 @@ function NewAppt() {
   const [deposit, setDeposit] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("clients").select("id,name").order("name").then(({ data }) => {
+      setClients(data ?? []);
+    });
+  }, [user]);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (clientBoxRef.current && !clientBoxRef.current.contains(e.target as Node)) {
+        setClientOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const filteredClients = useMemo(() => {
+    const q = clientQuery.trim().toLowerCase();
+    if (!q) return clients;
+    return clients.filter((c) => c.name.toLowerCase().includes(q));
+  }, [clients, clientQuery]);
+
   const amount = Number(deposit.replace(",", ".")) || 0;
   const pixPayload = useMemo(
     () => buildPixPayload({ key: PIX_KEY, merchant: MERCHANT, city: CITY, amount: amount > 0 ? amount : undefined }),
     [amount],
   );
 
+  const pickClient = (c: ClientRow) => {
+    setClientId(c.id);
+    setName(c.name);
+    setClientQuery(c.name);
+    setClientOpen(false);
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!client_name) return toast.error("Selecione um cliente");
+    if (!procedure) return toast.error("Selecione um procedimento");
     setBusy(true);
     const { error } = await supabase.from("appointments").insert({
       user_id: user.id,
+      client_id: clientId || null,
       client_name, procedure, date, time, notes: notes || null,
       deposit_amount: amount > 0 ? amount : null,
     });
@@ -66,8 +116,53 @@ function NewAppt() {
       </header>
       <main className="mx-auto max-w-md px-4 py-4">
         <form onSubmit={submit} className="space-y-4">
-          <Field label="Cliente"><Input required value={client_name} onChange={(e) => setName(e.target.value)} placeholder="Nome da cliente" /></Field>
-          <Field label="Procedimento"><Input required value={procedure} onChange={(e) => setProc(e.target.value)} placeholder="Ex: Limpeza de pele" /></Field>
+          <Field label="Cliente">
+            <div ref={clientBoxRef} className="relative">
+              <div className="relative">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  value={clientQuery}
+                  onChange={(e) => { setClientQuery(e.target.value); setClientOpen(true); setClientId(""); setName(e.target.value); }}
+                  onFocus={() => setClientOpen(true)}
+                  placeholder="Buscar cliente..."
+                  className="pl-9"
+                  autoComplete="off"
+                />
+              </div>
+              {clientOpen && (
+                <div className="absolute z-30 mt-1 w-full max-h-60 overflow-auto rounded-md border border-border bg-card shadow-lg">
+                  {filteredClients.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum cliente encontrado</div>
+                  ) : (
+                    filteredClients.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => pickClient(c)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+                      >
+                        {c.name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </Field>
+          <Field label="Procedimento">
+            <div className="relative">
+              <select
+                required
+                value={procedure}
+                onChange={(e) => setProc(e.target.value)}
+                className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm appearance-none pr-9 focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="" disabled>Selecione um procedimento</option>
+                {PROCEDURES.map((p) => (<option key={p} value={p}>{p}</option>))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
+            </div>
+          </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Data"><Input type="date" required value={date} onChange={(e) => setDate(e.target.value)} /></Field>
             <Field label="Horário"><Input type="time" required value={time} onChange={(e) => setTime(e.target.value)} /></Field>
