@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, Input, Field } from "@/components/u";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { PhoneInput } from "@/components/PhoneInput";
 import { initials } from "@/lib/format";
 import { toast } from "sonner";
 
