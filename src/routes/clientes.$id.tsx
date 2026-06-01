@@ -243,8 +243,7 @@ function ClientePage() {
               <Input type="date" value={c.birth_date || ""} onChange={(e) => updateClient({ birth_date: e.target.value })} />
             </Field>
             <Field label="WhatsApp">
-              <Input inputMode="tel" placeholder="(11) 99999-9999" value={c.phone || ""}
-                     onChange={(e) => updateClient({ phone: e.target.value })} />
+              <PhoneInput value={c.phone} onChange={(v) => updateClient({ phone: v })} />
             </Field>
             <Field label="E-mail">
               <Input type="email" value={c.email || ""} onChange={(e) => updateClient({ email: e.target.value })} />
