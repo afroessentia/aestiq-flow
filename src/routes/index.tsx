@@ -22,11 +22,14 @@ interface Ret { id: string; procedure: string; return_date: string; clients: { i
 function Dashboard() {
   const { user } = useAuth();
   const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
-  const rawName =
+  const metaName =
     (meta.full_name as string | undefined) ||
+    (meta.display_name as string | undefined) ||
     (meta.name as string | undefined) ||
     (meta.first_name as string | undefined) ||
     "";
+  const [profileName, setProfileName] = useState("");
+  const rawName = metaName || profileName;
   const firstName = rawName.trim().split(/\s+/)[0] || "";
   const greeting = firstName ? `Olá, ${firstName} 👋` : "Olá 👋";
   const [appts, setAppts] = useState<Appt[]>([]);
@@ -52,6 +55,25 @@ function Dashboard() {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    if (metaName || !user?.id) return;
+    // Fallback: try profiles table for a display name. Table may not exist — ignore errors.
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles" as never)
+          .select("full_name,display_name,name,first_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        const d = (data ?? {}) as Record<string, string | null>;
+        const n = d.full_name || d.display_name || d.name || d.first_name || "";
+        if (n) setProfileName(n);
+      } catch {
+        /* no-op */
+      }
+    })();
+  }, [user?.id, metaName]);
 
   return (
     <AppShell title="AESTIQ">
