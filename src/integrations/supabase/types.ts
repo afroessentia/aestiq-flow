@@ -129,6 +129,8 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          lgpd_consent: boolean
+          lgpd_consent_at: string | null
           name: string
           notes: string | null
           phone: string | null
@@ -140,6 +142,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          lgpd_consent?: boolean
+          lgpd_consent_at?: string | null
           name: string
           notes?: string | null
           phone?: string | null
@@ -151,6 +155,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          lgpd_consent?: boolean
+          lgpd_consent_at?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
@@ -159,50 +165,92 @@ export type Database = {
         }
         Relationships: []
       }
+      facial_markers: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          note: string | null
+          number: number
+          user_id: string
+          x: number
+          y: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          number: number
+          user_id: string
+          x: number
+          y: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          number?: number
+          user_id?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
       procedures: {
         Row: {
           after_photo: string | null
+          application_zone: string | null
           before_photo: string | null
           client_id: string
           created_at: string
           date: string
           days_until_return: number
+          expiration_date: string | null
           id: string
           notes: string | null
           procedure: string
           product_lot: string | null
           return_date: string | null
           return_done: boolean
+          units: number | null
           user_id: string
         }
         Insert: {
           after_photo?: string | null
+          application_zone?: string | null
           before_photo?: string | null
           client_id: string
           created_at?: string
           date: string
           days_until_return?: number
+          expiration_date?: string | null
           id?: string
           notes?: string | null
           procedure: string
           product_lot?: string | null
           return_date?: string | null
           return_done?: boolean
+          units?: number | null
           user_id: string
         }
         Update: {
           after_photo?: string | null
+          application_zone?: string | null
           before_photo?: string | null
           client_id?: string
           created_at?: string
           date?: string
           days_until_return?: number
+          expiration_date?: string | null
           id?: string
           notes?: string | null
           procedure?: string
           product_lot?: string | null
           return_date?: string | null
           return_done?: boolean
+          units?: number | null
           user_id?: string
         }
         Relationships: [
