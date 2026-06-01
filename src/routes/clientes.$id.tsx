@@ -58,6 +58,7 @@ function ClientePage() {
   const [showAddPair, setShowAddPair] = useState(false);
   const [newBefore, setNewBefore] = useState<File | null>(null);
   const [newAfter, setNewAfter] = useState<File | null>(null);
+  const [showNewSession, setShowNewSession] = useState(false);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const reloadProcs = async () => {
