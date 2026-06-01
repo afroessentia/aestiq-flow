@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Search, UserRound } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
