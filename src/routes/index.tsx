@@ -5,6 +5,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, SectionTitle } from "@/components/u";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { fmtDate, fmtTime, todayISO, waLink } from "@/lib/format";
 
 export const Route = createFileRoute("/")({
@@ -19,6 +20,15 @@ interface Appt { id: string; client_name: string; procedure: string; time: strin
 interface Ret { id: string; procedure: string; return_date: string; clients: { id: string; name: string; phone: string | null } | null; }
 
 function Dashboard() {
+  const { user } = useAuth();
+  const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+  const rawName =
+    (meta.full_name as string | undefined) ||
+    (meta.name as string | undefined) ||
+    (meta.first_name as string | undefined) ||
+    "";
+  const firstName = rawName.trim().split(/\s+/)[0] || "";
+  const greeting = firstName ? `Olá, ${firstName} 👋` : "Olá 👋";
   const [appts, setAppts] = useState<Appt[]>([]);
   const [returns, setReturns] = useState<Ret[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +57,7 @@ function Dashboard() {
     <AppShell title="AESTIQ">
       <div className="mb-5">
         <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</p>
-        <h2 className="text-2xl font-bold text-dark mt-0.5">Olá 👋</h2>
+        <h2 className="text-2xl font-bold text-dark mt-0.5">{greeting}</h2>
       </div>
 
       <Link to="/agendamentos/novo" className="block mb-6">
