@@ -19,6 +19,7 @@ function NovoProc() {
   const [busy, setBusy] = useState(false);
   const [date, setDate] = useState(todayISO());
   const [procedure, setProcedure] = useState("");
+  const [product, setProduct] = useState("");
   const [units, setUnits] = useState<string>("");
   const [product_lot, setLot] = useState("");
   const [expiration, setExpiration] = useState("");
@@ -49,6 +50,7 @@ function NovoProc() {
       const { error } = await supabase.from("procedures").insert({
         user_id: user.id, client_id: id,
         date, procedure,
+        product: product || null,
         product_lot: product_lot || null,
         units: units ? Number(units) : null,
         expiration_date: expiration || null,
@@ -79,7 +81,8 @@ function NovoProc() {
       <main className="mx-auto max-w-md px-4 py-4">
         <form onSubmit={submit} className="space-y-4">
           <Field label="Data"><Input type="date" required value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-          <Field label="Produto / procedimento"><Input required value={procedure} onChange={(e) => setProcedure(e.target.value)} placeholder="Ex: Botox Allergan" /></Field>
+          <Field label="Nome do procedimento"><Input required value={procedure} onChange={(e) => setProcedure(e.target.value)} placeholder="Ex: Toxina Botulínica" /></Field>
+          <Field label="Produto utilizado"><Input value={product} onChange={(e) => setProduct(e.target.value)} placeholder="Ex: Botox Allergan" /></Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Unidades aplicadas"><Input type="number" min={0} value={units} onChange={(e) => setUnits(e.target.value)} placeholder="Ex: 30" /></Field>
             <Field label="Zona de aplicação"><Input value={zone} onChange={(e) => setZone(e.target.value)} placeholder="Ex: Glabela" /></Field>
