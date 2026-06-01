@@ -108,7 +108,6 @@ function ClientePage() {
   });
 
   // Facial mapping
-  const svgRef = useRef<SVGSVGElement | null>(null);
   const handleFaceClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
