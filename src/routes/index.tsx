@@ -56,6 +56,25 @@ function Dashboard() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (metaName || !user?.id) return;
+    // Fallback: try profiles table for a display name. Table may not exist — ignore errors.
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("profiles" as never)
+          .select("full_name,display_name,name,first_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        const d = (data ?? {}) as Record<string, string | null>;
+        const n = d.full_name || d.display_name || d.name || d.first_name || "";
+        if (n) setProfileName(n);
+      } catch {
+        /* no-op */
+      }
+    })();
+  }, [user?.id, metaName]);
+
   return (
     <AppShell title="AESTIQ">
       <div className="mb-5">
