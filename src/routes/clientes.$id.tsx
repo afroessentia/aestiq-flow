@@ -3,9 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, FileText, Plus, MessageCircle, Camera, Save, Trash2, X } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, EmptyState, Field, Input, Label, SectionTitle, Textarea } from "@/components/u";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { fmtDate, fmtDateTime, initials, waLink } from "@/lib/format";
+import { fmtDate, fmtDateTime, initials, todayISO, waLink } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/clientes/$id")({
