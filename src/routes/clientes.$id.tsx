@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, FileText, Plus, MessageCircle, Camera, Save, Trash2 } from "lucide-react";
+import { ChevronLeft, FileText, Plus, MessageCircle, Camera, Save, Trash2, X } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, EmptyState, Field, Input, Label, SectionTitle, Textarea } from "@/components/u";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,12 +18,21 @@ interface Client {
   lgpd_consent: boolean; lgpd_consent_at: string | null;
 }
 interface Proc {
-  id: string; date: string; procedure: string; product_lot: string | null;
+  id: string; date: string; procedure: string; product: string | null; product_lot: string | null;
   return_date: string | null; before_photo: string | null; after_photo: string | null;
   units: number | null; expiration_date: string | null; application_zone: string | null;
   notes: string | null;
 }
-interface Marker { id?: string; number: number; x: number; y: number; note: string | null; }
+interface Marker { id?: string; number: number; x: number; y: number; note: string | null; region: string; }
+
+type Region = "rosto" | "pescoco" | "decote" | "membros_inferiores" | "corpo_inteiro";
+const REGIONS: { value: Region; label: string }[] = [
+  { value: "rosto", label: "Rosto" },
+  { value: "pescoco", label: "Pescoço" },
+  { value: "decote", label: "Decote" },
+  { value: "membros_inferiores", label: "Membros inferiores" },
+  { value: "corpo_inteiro", label: "Corpo inteiro" },
+];
 
 function signedUrl(path: string | null): Promise<string | null> {
   if (!path) return Promise.resolve(null);
@@ -40,13 +49,29 @@ function ClientePage() {
   const [thumbs, setThumbs] = useState<Record<string, { before: string | null; after: string | null }>>({});
   const [hasAnamnesis, setHasAnamnesis] = useState(false);
   const [markers, setMarkers] = useState<Marker[]>([]);
+  const [region, setRegion] = useState<Region>("rosto");
   const [selectedMarker, setSelectedMarker] = useState<number | null>(null);
   const [savingHeader, setSavingHeader] = useState(false);
   const [savingMarkers, setSavingMarkers] = useState(false);
   const [savingPhotos, setSavingPhotos] = useState(false);
+  const [showAddPair, setShowAddPair] = useState(false);
   const [newBefore, setNewBefore] = useState<File | null>(null);
   const [newAfter, setNewAfter] = useState<File | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+
+  const reloadProcs = async () => {
+    const { data: pr } = await supabase.from("procedures")
+      .select("id,date,procedure,product,product_lot,return_date,before_photo,after_photo,units,expiration_date,application_zone,notes")
+      .eq("client_id", id).order("date", { ascending: false });
+    const ps = (pr as unknown as Proc[]) || [];
+    setProcs(ps);
+    const t: Record<string, { before: string | null; after: string | null }> = {};
+    await Promise.all(ps.map(async p => {
+      const [b, a] = await Promise.all([signedUrl(p.before_photo), signedUrl(p.after_photo)]);
+      t[p.id] = { before: b, after: a };
+    }));
+    setThumbs(t);
+  };
 
   useEffect(() => {
     (async () => {
@@ -54,33 +79,22 @@ function ClientePage() {
         .select("id,name,phone,email,birth_date,notes,lgpd_consent,lgpd_consent_at")
         .eq("id", id).single();
       setC(cli as Client | null);
-
-      const { data: pr } = await supabase.from("procedures")
-        .select("id,date,procedure,product_lot,return_date,before_photo,after_photo,units,expiration_date,application_zone,notes")
-        .eq("client_id", id).order("date", { ascending: false });
-      const ps = (pr as Proc[]) || [];
-      setProcs(ps);
-
-      const t: Record<string, { before: string | null; after: string | null }> = {};
-      await Promise.all(ps.map(async p => {
-        const [b, a] = await Promise.all([signedUrl(p.before_photo), signedUrl(p.after_photo)]);
-        t[p.id] = { before: b, after: a };
-      }));
-      setThumbs(t);
-
+      await reloadProcs();
       const { data: an } = await supabase.from("anamnesis").select("id").eq("client_id", id).maybeSingle();
       setHasAnamnesis(!!an);
-
       const { data: mk } = await supabase.from("facial_markers")
-        .select("id,number,x,y,note").eq("client_id", id).order("number");
-      setMarkers((mk as Marker[]) || []);
+        .select("id,number,x,y,note,region").eq("client_id", id).order("number");
+      setMarkers((mk as unknown as Marker[]) || []);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const latestPair = useMemo(() => {
-    const first = procs.find(p => thumbs[p.id]?.before || thumbs[p.id]?.after);
-    return first ? { proc: first, urls: thumbs[first.id] } : null;
-  }, [procs, thumbs]);
+  const photoPairs = useMemo(
+    () => procs.filter(p => thumbs[p.id]?.before || thumbs[p.id]?.after),
+    [procs, thumbs]
+  );
+
+  const regionMarkers = useMemo(() => markers.filter(m => m.region === region), [markers, region]);
 
   if (!c) return <div className="min-h-dvh flex items-center justify-center text-sm text-muted-foreground">Carregando...</div>;
 
@@ -113,28 +127,31 @@ function ClientePage() {
     const rect = svgRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    const number = (markers.reduce((m, k) => Math.max(m, k.number), 0)) + 1;
-    setMarkers(prev => [...prev, { number, x, y, note: "" }]);
+    const number = (regionMarkers.reduce((m, k) => Math.max(m, k.number), 0)) + 1;
+    setMarkers(prev => [...prev, { number, x, y, note: "", region }]);
     setSelectedMarker(number);
   };
 
   const removeMarker = (num: number) => {
-    setMarkers(prev => prev.filter(m => m.number !== num));
+    setMarkers(prev => prev.filter(m => !(m.number === num && m.region === region)));
     if (selectedMarker === num) setSelectedMarker(null);
   };
 
   const updateMarkerNote = (num: number, note: string) => {
-    setMarkers(prev => prev.map(m => m.number === num ? { ...m, note } : m));
+    setMarkers(prev => prev.map(m => (m.number === num && m.region === region) ? { ...m, note } : m));
   };
 
   const saveMarkers = async () => {
     if (!user) return;
     setSavingMarkers(true);
-    const { error: delErr } = await supabase.from("facial_markers").delete().eq("client_id", id);
+    // Replace only this region's markers
+    const { error: delErr } = await supabase.from("facial_markers")
+      .delete().eq("client_id", id).eq("region", region);
     if (delErr) { setSavingMarkers(false); return toast.error(delErr.message); }
-    if (markers.length > 0) {
-      const rows = markers.map(m => ({
-        user_id: user.id, client_id: id, number: m.number, x: m.x, y: m.y, note: m.note || null,
+    if (regionMarkers.length > 0) {
+      const rows = regionMarkers.map(m => ({
+        user_id: user.id, client_id: id, number: m.number, x: m.x, y: m.y,
+        note: m.note || null, region,
       }));
       const { error } = await supabase.from("facial_markers").insert(rows);
       if (error) { setSavingMarkers(false); return toast.error(error.message); }
@@ -168,25 +185,22 @@ function ClientePage() {
         before_photo: bp, after_photo: ap, days_until_return: 15,
       });
       if (error) throw error;
-      toast.success("Fotos adicionadas");
-      setNewBefore(null); setNewAfter(null);
-      // reload
-      const { data: pr } = await supabase.from("procedures")
-        .select("id,date,procedure,product_lot,return_date,before_photo,after_photo,units,expiration_date,application_zone,notes")
-        .eq("client_id", id).order("date", { ascending: false });
-      const ps = (pr as Proc[]) || [];
-      setProcs(ps);
-      const t: Record<string, { before: string | null; after: string | null }> = {};
-      await Promise.all(ps.map(async p => {
-        const [b, a] = await Promise.all([signedUrl(p.before_photo), signedUrl(p.after_photo)]);
-        t[p.id] = { before: b, after: a };
-      }));
-      setThumbs(t);
+      toast.success("Comparação adicionada");
+      setNewBefore(null); setNewAfter(null); setShowAddPair(false);
+      await reloadProcs();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar");
     } finally {
       setSavingPhotos(false);
     }
+  };
+
+  const deletePair = async (procId: string) => {
+    if (!confirm("Excluir esta comparação?")) return;
+    const { error } = await supabase.from("procedures").delete().eq("id", procId);
+    if (error) return toast.error(error.message);
+    toast.success("Comparação removida");
+    await reloadProcs();
   };
 
   return (
@@ -266,38 +280,72 @@ function ClientePage() {
           </div>
         </section>
 
-        {/* 2. Before / after photos */}
+        {/* 2. Before / after photos — multiple pairs */}
         <section>
           <SectionTitle>Fotos antes e depois</SectionTitle>
 
-          {latestPair && (
-            <Card className="mb-3">
-              <p className="text-xs text-muted-foreground mb-2">Última comparação · {fmtDate(latestPair.proc.date)}</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Compare label="Antes" url={latestPair.urls?.before} />
-                <Compare label="Depois" url={latestPair.urls?.after} />
-              </div>
-            </Card>
+          {photoPairs.length === 0 && !showAddPair && (
+            <EmptyState title="Nenhuma comparação ainda" hint="Adicione a primeira comparação abaixo." />
           )}
 
-          <Card>
-            <p className="text-sm font-medium mb-2">Adicionar nova comparação</p>
-            <div className="grid grid-cols-2 gap-3">
-              <PhotoInput label="Antes" file={newBefore} onChange={setNewBefore} />
-              <PhotoInput label="Depois" file={newAfter} onChange={setNewAfter} />
-            </div>
-            <Button full className="mt-3" onClick={savePhotoPair} disabled={savingPhotos}>
-              <Save className="w-4 h-4" /> {savingPhotos ? "Enviando..." : "Salvar fotos"}
+          <div className="space-y-3">
+            {photoPairs.map(p => (
+              <Card key={p.id}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-muted-foreground">{fmtDate(p.date)}</p>
+                  <button onClick={() => deletePair(p.id)} className="p-1 text-muted-foreground"
+                          aria-label="Excluir comparação">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Compare label="Antes" url={thumbs[p.id]?.before} />
+                  <Compare label="Depois" url={thumbs[p.id]?.after} />
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {showAddPair ? (
+            <Card className="mt-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">Nova comparação</p>
+                <button onClick={() => { setShowAddPair(false); setNewBefore(null); setNewAfter(null); }}
+                        className="p-1 text-muted-foreground" aria-label="Cancelar">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <PhotoInput label="Antes" file={newBefore} onChange={setNewBefore} />
+                <PhotoInput label="Depois" file={newAfter} onChange={setNewAfter} />
+              </div>
+              <Button full className="mt-3" onClick={savePhotoPair} disabled={savingPhotos}>
+                <Save className="w-4 h-4" /> {savingPhotos ? "Enviando..." : "Salvar comparação"}
+              </Button>
+            </Card>
+          ) : (
+            <Button variant="dark" full className="mt-3" onClick={() => setShowAddPair(true)}>
+              <Plus className="w-4 h-4" /> Adicionar comparação
             </Button>
-          </Card>
+          )}
         </section>
 
-        {/* 3. Facial mapping */}
+        {/* 3. Facial / body mapping */}
         <section>
-          <SectionTitle>Mapeamento facial</SectionTitle>
+          <SectionTitle>Mapeamento corporal</SectionTitle>
           <Card>
-            <p className="text-xs text-muted-foreground mb-2">
-              Toque no rosto para marcar zonas de aplicação. Cada ponto fica numerado.
+            <Field label="Região do corpo">
+              <select
+                value={region}
+                onChange={(e) => { setRegion(e.target.value as Region); setSelectedMarker(null); }}
+                className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {REGIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </Field>
+
+            <p className="text-xs text-muted-foreground mt-3 mb-2">
+              Toque na silhueta para marcar zonas de aplicação. Cada ponto fica numerado.
             </p>
             <div className="relative w-full aspect-[3/4] bg-surface rounded-lg overflow-hidden select-none">
               <svg
@@ -306,23 +354,9 @@ function ClientePage() {
                 onClick={handleFaceClick}
                 className="absolute inset-0 w-full h-full cursor-crosshair"
               >
-                {/* Head oval */}
-                <ellipse cx="150" cy="200" rx="100" ry="140" fill="#FAFAF9" stroke="#1A2E35" strokeWidth="2" />
-                {/* Eye line */}
-                <line x1="70" y1="180" x2="230" y2="180" stroke="#1A2E35" strokeOpacity="0.25" strokeDasharray="3 3" />
-                <ellipse cx="115" cy="180" rx="14" ry="6" fill="none" stroke="#1A2E35" strokeOpacity="0.5" />
-                <ellipse cx="185" cy="180" rx="14" ry="6" fill="none" stroke="#1A2E35" strokeOpacity="0.5" />
-                {/* Nose line */}
-                <line x1="150" y1="180" x2="150" y2="245" stroke="#1A2E35" strokeOpacity="0.4" />
-                <path d="M140 245 Q150 255 160 245" fill="none" stroke="#1A2E35" strokeOpacity="0.5" />
-                {/* Mouth line */}
-                <line x1="100" y1="285" x2="200" y2="285" stroke="#1A2E35" strokeOpacity="0.25" strokeDasharray="3 3" />
-                <path d="M125 285 Q150 300 175 285" fill="none" stroke="#1A2E35" strokeOpacity="0.6" strokeWidth="1.5" />
-                {/* Brows */}
-                <path d="M95 160 Q115 152 135 160" fill="none" stroke="#1A2E35" strokeOpacity="0.5" strokeWidth="2" />
-                <path d="M165 160 Q185 152 205 160" fill="none" stroke="#1A2E35" strokeOpacity="0.5" strokeWidth="2" />
+                <RegionSilhouette region={region} />
 
-                {markers.map(m => (
+                {regionMarkers.map(m => (
                   <g key={m.number} onClick={(e) => { e.stopPropagation(); setSelectedMarker(m.number); }}>
                     <circle cx={(m.x / 100) * 300} cy={(m.y / 100) * 400} r={selectedMarker === m.number ? 14 : 12}
                             fill="#2A9D8F" stroke="#FAFAF9" strokeWidth="2" />
@@ -335,9 +369,9 @@ function ClientePage() {
               </svg>
             </div>
 
-            {markers.length > 0 && (
+            {regionMarkers.length > 0 && (
               <div className="mt-3 space-y-2">
-                {markers.map(m => (
+                {regionMarkers.map(m => (
                   <div key={m.number}
                        className={`rounded-lg border p-2 ${selectedMarker === m.number ? "border-primary" : "border-border"}`}>
                     <div className="flex items-center gap-2 mb-1">
@@ -374,7 +408,7 @@ function ClientePage() {
           </SectionTitle>
 
           {procs.length === 0 ? (
-            <EmptyState title="Nenhuma sessão registrada" hint="Adicione a primeira sessão pelo botão acima." />
+            <EmptyState title="Nenhuma sessão registrada ainda" hint="Adicione a primeira sessão pelo botão acima." />
           ) : (
             <div className="space-y-2">
               {procs.map(p => {
@@ -437,4 +471,86 @@ function PhotoInput({ label, file, onChange }: { label: string; file: File | nul
              onChange={(e) => onChange(e.target.files?.[0] ?? null)} className="hidden" />
     </label>
   );
+}
+
+function RegionSilhouette({ region }: { region: Region }) {
+  const stroke = "#1A2E35";
+  const fill = "#FAFAF9";
+  switch (region) {
+    case "rosto":
+      return (
+        <g>
+          <ellipse cx="150" cy="200" rx="100" ry="140" fill={fill} stroke={stroke} strokeWidth="2" />
+          <line x1="70" y1="180" x2="230" y2="180" stroke={stroke} strokeOpacity="0.25" strokeDasharray="3 3" />
+          <ellipse cx="115" cy="180" rx="14" ry="6" fill="none" stroke={stroke} strokeOpacity="0.5" />
+          <ellipse cx="185" cy="180" rx="14" ry="6" fill="none" stroke={stroke} strokeOpacity="0.5" />
+          <line x1="150" y1="180" x2="150" y2="245" stroke={stroke} strokeOpacity="0.4" />
+          <path d="M140 245 Q150 255 160 245" fill="none" stroke={stroke} strokeOpacity="0.5" />
+          <line x1="100" y1="285" x2="200" y2="285" stroke={stroke} strokeOpacity="0.25" strokeDasharray="3 3" />
+          <path d="M125 285 Q150 300 175 285" fill="none" stroke={stroke} strokeOpacity="0.6" strokeWidth="1.5" />
+          <path d="M95 160 Q115 152 135 160" fill="none" stroke={stroke} strokeOpacity="0.5" strokeWidth="2" />
+          <path d="M165 160 Q185 152 205 160" fill="none" stroke={stroke} strokeOpacity="0.5" strokeWidth="2" />
+        </g>
+      );
+    case "pescoco":
+      return (
+        <g>
+          {/* Lower jaw line */}
+          <path d="M70 70 Q150 130 230 70" fill="none" stroke={stroke} strokeOpacity="0.4" strokeWidth="2" />
+          {/* Neck */}
+          <path d="M100 70 L100 280 Q150 320 200 280 L200 70" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Shoulders */}
+          <path d="M40 300 Q100 270 150 300 Q200 270 260 300 L260 360 L40 360 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Adam's apple hint */}
+          <line x1="150" y1="120" x2="150" y2="240" stroke={stroke} strokeOpacity="0.2" strokeDasharray="3 3" />
+        </g>
+      );
+    case "decote":
+      return (
+        <g>
+          {/* Neck */}
+          <path d="M110 30 L110 110 Q150 140 190 110 L190 30" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Shoulders + chest */}
+          <path d="M20 180 Q80 130 150 160 Q220 130 280 180 L280 380 L20 380 Z"
+                fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Collarbone hint */}
+          <path d="M60 180 Q150 200 240 180" fill="none" stroke={stroke} strokeOpacity="0.3" strokeDasharray="3 3" />
+          {/* Sternum / décolleté V */}
+          <path d="M150 160 L120 280 M150 160 L180 280" fill="none" stroke={stroke} strokeOpacity="0.3" />
+        </g>
+      );
+    case "membros_inferiores":
+      return (
+        <g>
+          {/* Hip line */}
+          <path d="M70 30 Q150 60 230 30 L240 80 L60 80 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Left leg */}
+          <path d="M75 80 Q90 200 100 380 L140 380 Q138 200 140 80 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Right leg */}
+          <path d="M225 80 Q210 200 200 380 L160 380 Q162 200 160 80 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Knee hints */}
+          <ellipse cx="118" cy="240" rx="14" ry="8" fill="none" stroke={stroke} strokeOpacity="0.4" />
+          <ellipse cx="182" cy="240" rx="14" ry="8" fill="none" stroke={stroke} strokeOpacity="0.4" />
+        </g>
+      );
+    case "corpo_inteiro":
+      return (
+        <g>
+          {/* Head */}
+          <ellipse cx="150" cy="45" rx="26" ry="32" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Neck */}
+          <rect x="138" y="74" width="24" height="14" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Torso */}
+          <path d="M95 90 Q150 100 205 90 L220 220 Q150 240 80 220 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Arms */}
+          <path d="M95 92 Q70 95 60 110 L52 210 L72 215 L88 120 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          <path d="M205 92 Q230 95 240 110 L248 210 L228 215 L212 120 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Hips */}
+          <path d="M85 220 Q150 240 215 220 L222 260 L78 260 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          {/* Legs */}
+          <path d="M88 260 Q98 320 108 388 L142 388 Q140 320 142 260 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+          <path d="M212 260 Q202 320 192 388 L158 388 Q160 320 158 260 Z" fill={fill} stroke={stroke} strokeWidth="2" />
+        </g>
+      );
+  }
 }
