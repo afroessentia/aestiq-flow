@@ -172,6 +172,7 @@ export type Database = {
           id: string
           note: string | null
           number: number
+          region: string
           user_id: string
           x: number
           y: number
@@ -182,6 +183,7 @@ export type Database = {
           id?: string
           note?: string | null
           number: number
+          region?: string
           user_id: string
           x: number
           y: number
@@ -192,6 +194,7 @@ export type Database = {
           id?: string
           note?: string | null
           number?: number
+          region?: string
           user_id?: string
           x?: number
           y?: number
@@ -211,6 +214,7 @@ export type Database = {
           id: string
           notes: string | null
           procedure: string
+          product: string | null
           product_lot: string | null
           return_date: string | null
           return_done: boolean
@@ -229,6 +233,7 @@ export type Database = {
           id?: string
           notes?: string | null
           procedure: string
+          product?: string | null
           product_lot?: string | null
           return_date?: string | null
           return_done?: boolean
@@ -247,6 +252,7 @@ export type Database = {
           id?: string
           notes?: string | null
           procedure?: string
+          product?: string | null
           product_lot?: string | null
           return_date?: string | null
           return_done?: boolean
