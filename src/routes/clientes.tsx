@@ -89,7 +89,7 @@ function ClientesPage() {
             <div className="w-12 h-1 bg-border rounded-full mx-auto" />
             <h2 className="text-lg font-bold">Nova cliente</h2>
             <Field label="Nome completo"><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-            <Field label="WhatsApp"><Input inputMode="tel" placeholder="(11) 99999-9999" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
+            <Field label="WhatsApp"><PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} /></Field>
             <Field label="E-mail"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
             <div className="flex gap-2">
               <Button type="button" variant="outline" full onClick={() => setOpen(false)}>Cancelar</Button>
