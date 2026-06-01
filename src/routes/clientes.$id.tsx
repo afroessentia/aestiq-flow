@@ -46,6 +46,7 @@ function ClientePage() {
   const [savingPhotos, setSavingPhotos] = useState(false);
   const [newBefore, setNewBefore] = useState<File | null>(null);
   const [newAfter, setNewAfter] = useState<File | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -107,7 +108,6 @@ function ClientePage() {
   });
 
   // Facial mapping
-  const svgRef = useRef<SVGSVGElement | null>(null);
   const handleFaceClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
