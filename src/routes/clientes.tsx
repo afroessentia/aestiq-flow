@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Search, UserRound } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/clientes")({
 interface Client { id: string; name: string; phone: string | null; email: string | null; }
 
 function ClientesPage() {
+  const childMatches = useChildMatches();
   const { user } = useAuth();
   const [q, setQ] = useState("");
   const [items, setItems] = useState<Client[]>([]);
@@ -31,6 +32,9 @@ function ClientesPage() {
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [q]);
+
+  if (childMatches.length > 0) return <Outlet />;
+
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
