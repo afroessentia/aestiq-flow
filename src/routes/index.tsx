@@ -24,9 +24,7 @@ function Dashboard() {
   const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
   const metaName =
     (meta.full_name as string | undefined) ||
-    (meta.display_name as string | undefined) ||
     (meta.name as string | undefined) ||
-    (meta.first_name as string | undefined) ||
     "";
   const [profileName, setProfileName] = useState("");
   const rawName = metaName || profileName;
