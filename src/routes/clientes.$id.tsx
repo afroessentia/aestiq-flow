@@ -414,8 +414,8 @@ function ClientePage() {
               {procs.map(p => {
                 const thumb = thumbs[p.id]?.before;
                 return (
-                  <Link key={p.id} to="/clientes/$id/sessoes/$sid" params={{ id, sid: p.id }}>
-                    <Card className="flex gap-3 active:bg-surface">
+                  <Card key={p.id} className="flex gap-3 items-center">
+                    <Link to="/clientes/$id/sessoes/$sid" params={{ id, sid: p.id }} className="flex gap-3 flex-1 min-w-0 active:opacity-80">
                       <div className="w-14 h-14 rounded-lg bg-surface overflow-hidden shrink-0 flex items-center justify-center">
                         {thumb
                           ? <img src={thumb} alt="" className="w-full h-full object-cover" />
@@ -428,8 +428,16 @@ function ClientePage() {
                           <p className="text-xs text-muted-foreground truncate">{p.application_zone}{p.units ? ` · ${p.units}U` : ""}</p>
                         )}
                       </div>
-                    </Card>
-                  </Link>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setEditSession(p)}
+                      className="p-2 rounded-md text-muted-foreground hover:text-primary"
+                      aria-label="Editar sessão"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </Card>
                 );
               })}
             </div>
