@@ -1,0 +1,407 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, Plus, Trash2, Upload, Save } from "lucide-react";
+import { AuthGate } from "@/components/AuthGate";
+import { Button, Card, Field, Input } from "@/components/u";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { PhoneInput } from "@/components/PhoneInput";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { resolveAssetUrl } from "@/lib/useLogo";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/configuracoes")({
+  component: () => (<AuthGate><Settings /></AuthGate>),
+});
+
+const DAYS = [
+  { wd: 1, label: "Segunda" },
+  { wd: 2, label: "Terça" },
+  { wd: 3, label: "Quarta" },
+  { wd: 4, label: "Quinta" },
+  { wd: 5, label: "Sexta" },
+  { wd: 6, label: "Sábado" },
+];
+
+const PIX_TYPES = [
+  { v: "cpf", label: "CPF" },
+  { v: "cnpj", label: "CNPJ" },
+  { v: "email", label: "E-mail" },
+  { v: "telefone", label: "Telefone" },
+  { v: "aleatoria", label: "Chave aleatória" },
+];
+
+const REG_TYPES = ["CRM", "CRBio", "CRF", "CREFITO", "COREN", "Outro"];
+
+function Settings() {
+  return (
+    <div className="min-h-dvh bg-background">
+      <header className="sticky top-0 z-20 bg-background border-b border-border">
+        <div className="mx-auto max-w-md flex items-center px-4 h-14 gap-2">
+          <Link to="/" className="p-2 -ml-2"><ChevronLeft className="w-5 h-5" /></Link>
+          <h1 className="text-base font-semibold">Configurações</h1>
+        </div>
+      </header>
+      <main className="mx-auto max-w-md px-4 py-4 pb-12">
+        <Tabs defaultValue="clinica" className="w-full">
+          <TabsList className="grid grid-cols-4 w-full h-auto">
+            <TabsTrigger value="clinica" className="text-xs">Clínica</TabsTrigger>
+            <TabsTrigger value="procedimentos" className="text-xs">Procedimentos</TabsTrigger>
+            <TabsTrigger value="horarios" className="text-xs">Horários</TabsTrigger>
+            <TabsTrigger value="perfil" className="text-xs">Perfil</TabsTrigger>
+          </TabsList>
+          <TabsContent value="clinica" className="mt-4"><ClinicaTab /></TabsContent>
+          <TabsContent value="procedimentos" className="mt-4"><ProceduresTab /></TabsContent>
+          <TabsContent value="horarios" className="mt-4"><HoursTab /></TabsContent>
+          <TabsContent value="perfil" className="mt-4"><PerfilTab /></TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}
+
+/* ---------------- CLÍNICA ---------------- */
+function ClinicaTab() {
+  const { user } = useAuth();
+  const [clinic_name, setName] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [logoPath, setLogoPath] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [pixType, setPixType] = useState("email");
+  const [pixKey, setPixKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase.from("clinic_settings" as never)
+        .select("*").eq("user_id", user.id).maybeSingle();
+      const d = (data ?? {}) as Record<string, string | null>;
+      setName(d.clinic_name ?? "");
+      setCnpj(d.cnpj ?? "");
+      setAddress(d.address ?? "");
+      setPhone(d.phone ?? "");
+      setWhatsapp(d.whatsapp ?? "");
+      setLogoPath(d.logo_url ?? null);
+      setPixType(d.pix_key_type ?? "email");
+      setPixKey(d.pix_key ?? "");
+      const u = await resolveAssetUrl(d.logo_url ?? null);
+      setLogoUrl(u);
+    })();
+  }, [user?.id]);
+
+  const onLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${user.id}/logo-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("clinic-assets").upload(path, file, { upsert: true });
+    if (error) return toast.error(error.message);
+    setLogoPath(path);
+    const u = await resolveAssetUrl(path);
+    setLogoUrl(u);
+    toast.success("Logo carregada (salve para confirmar)");
+  };
+
+  const save = async () => {
+    if (!user) return;
+    setBusy(true);
+    const { error } = await supabase.from("clinic_settings" as never).upsert({
+      user_id: user.id,
+      clinic_name, cnpj, address, phone, whatsapp,
+      logo_url: logoPath,
+      pix_key_type: pixType,
+      pix_key: pixKey,
+      updated_at: new Date().toISOString(),
+    } as never);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Clínica salva");
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="flex items-center gap-3">
+        <div className="w-16 h-16 rounded-lg bg-surface flex items-center justify-center overflow-hidden border border-border">
+          {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" /> : <span className="text-2xl font-bold text-primary">A</span>}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium">Logo da clínica</p>
+          <p className="text-xs text-muted-foreground">Substitui o ícone padrão em todo o app.</p>
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" onChange={onLogoChange} className="hidden" />
+        <Button type="button" variant="secondary" size="sm" onClick={() => fileRef.current?.click()}>
+          <Upload className="w-4 h-4" />
+        </Button>
+      </Card>
+
+      <Field label="Nome da clínica"><Input value={clinic_name} onChange={(e) => setName(e.target.value)} /></Field>
+      <Field label="CNPJ"><Input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" /></Field>
+      <Field label="Endereço"><Input value={address} onChange={(e) => setAddress(e.target.value)} /></Field>
+      <Field label="Telefone"><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 0000-0000" /></Field>
+      <Field label="WhatsApp Business">
+        <PhoneInput value={whatsapp} onChange={setWhatsapp} />
+      </Field>
+
+      <Card className="space-y-3">
+        <p className="text-sm font-semibold">Chave Pix</p>
+        <Field label="Tipo">
+          <select value={pixType} onChange={(e) => setPixType(e.target.value)}
+            className="w-full h-12 rounded-lg border border-border bg-card px-3 text-base">
+            {PIX_TYPES.map((p) => <option key={p.v} value={p.v}>{p.label}</option>)}
+          </select>
+        </Field>
+        <Field label="Chave"><Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="Digite a chave" /></Field>
+      </Card>
+
+      <Button full onClick={save} disabled={busy}><Save className="w-4 h-4" /> {busy ? "Salvando..." : "Salvar"}</Button>
+    </div>
+  );
+}
+
+/* ---------------- PROCEDIMENTOS ---------------- */
+interface Proc { id: string; name: string; default_price: number | null; }
+function ProceduresTab() {
+  const { user } = useAuth();
+  const [items, setItems] = useState<Proc[]>([]);
+  const [newName, setNewName] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("clinic_procedures" as never)
+      .select("id,name,default_price").eq("user_id", user.id).order("name");
+    setItems((data as unknown as Proc[]) ?? []);
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id]);
+
+  const add = async () => {
+    if (!user || !newName.trim()) return;
+    const price = Number(newPrice.replace(",", ".")) || null;
+    const { error } = await supabase.from("clinic_procedures" as never).insert({
+      user_id: user.id, name: newName.trim(), default_price: price,
+    } as never);
+    if (error) return toast.error(error.message);
+    setNewName(""); setNewPrice("");
+    load();
+  };
+  const remove = async (id: string) => {
+    await supabase.from("clinic_procedures" as never).delete().eq("id", id);
+    load();
+  };
+  const updateRow = async (id: string, patch: Partial<Proc>) => {
+    setItems((cur) => cur.map((p) => p.id === id ? { ...p, ...patch } : p));
+  };
+  const saveAll = async () => {
+    setBusy(true);
+    for (const p of items) {
+      await supabase.from("clinic_procedures" as never)
+        .update({ name: p.name, default_price: p.default_price } as never).eq("id", p.id);
+    }
+    setBusy(false);
+    toast.success("Procedimentos salvos");
+  };
+
+  return (
+    <div className="space-y-3">
+      <Card className="space-y-2">
+        <p className="text-sm font-semibold">Adicionar procedimento</p>
+        <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nome" />
+        <Input inputMode="decimal" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="Preço (R$)" />
+        <Button onClick={add} full variant="secondary"><Plus className="w-4 h-4" /> Adicionar</Button>
+      </Card>
+
+      <div className="space-y-2">
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">Nenhum procedimento cadastrado</p>
+        ) : items.map((p) => (
+          <Card key={p.id} className="space-y-2">
+            <div className="flex gap-2">
+              <Input value={p.name} onChange={(e) => updateRow(p.id, { name: e.target.value })} />
+              <button onClick={() => remove(p.id)} className="p-2 text-destructive" aria-label="Excluir">
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+            <Input
+              inputMode="decimal"
+              value={p.default_price ?? ""}
+              onChange={(e) => updateRow(p.id, { default_price: Number(e.target.value.replace(",", ".")) || null })}
+              placeholder="Preço (R$)"
+            />
+          </Card>
+        ))}
+      </div>
+
+      {items.length > 0 && (
+        <Button full onClick={saveAll} disabled={busy}><Save className="w-4 h-4" /> {busy ? "Salvando..." : "Salvar alterações"}</Button>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- HORÁRIOS ---------------- */
+interface WH { weekday: number; enabled: boolean; start_time: string | null; end_time: string | null; }
+function HoursTab() {
+  const { user } = useAuth();
+  const [rows, setRows] = useState<Record<number, WH>>({});
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase.from("work_hours" as never)
+        .select("weekday,enabled,start_time,end_time").eq("user_id", user.id);
+      const map: Record<number, WH> = {};
+      DAYS.forEach((d) => {
+        map[d.wd] = { weekday: d.wd, enabled: false, start_time: "09:00", end_time: "18:00" };
+      });
+      ((data as unknown as WH[]) ?? []).forEach((r) => {
+        map[r.weekday] = { ...r, start_time: r.start_time?.slice(0, 5) ?? "09:00", end_time: r.end_time?.slice(0, 5) ?? "18:00" };
+      });
+      setRows(map);
+    })();
+  }, [user?.id]);
+
+  const update = (wd: number, patch: Partial<WH>) => {
+    setRows((r) => ({ ...r, [wd]: { ...r[wd], ...patch } }));
+  };
+
+  const save = async () => {
+    if (!user) return;
+    setBusy(true);
+    const payload = DAYS.map((d) => ({
+      user_id: user.id,
+      weekday: d.wd,
+      enabled: rows[d.wd]?.enabled ?? false,
+      start_time: rows[d.wd]?.start_time || null,
+      end_time: rows[d.wd]?.end_time || null,
+      updated_at: new Date().toISOString(),
+    }));
+    const { error } = await supabase.from("work_hours" as never)
+      .upsert(payload as never, { onConflict: "user_id,weekday" } as never);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Horários salvos");
+  };
+
+  return (
+    <div className="space-y-3">
+      {DAYS.map((d) => {
+        const r = rows[d.wd] ?? { weekday: d.wd, enabled: false, start_time: "09:00", end_time: "18:00" };
+        return (
+          <Card key={d.wd} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-dark">{d.label}</p>
+              <Switch checked={r.enabled} onCheckedChange={(v) => update(d.wd, { enabled: v })} />
+            </div>
+            {r.enabled && (
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Início">
+                  <Input type="time" value={r.start_time ?? ""} onChange={(e) => update(d.wd, { start_time: e.target.value })} />
+                </Field>
+                <Field label="Fim">
+                  <Input type="time" value={r.end_time ?? ""} onChange={(e) => update(d.wd, { end_time: e.target.value })} />
+                </Field>
+              </div>
+            )}
+          </Card>
+        );
+      })}
+      <Button full onClick={save} disabled={busy}><Save className="w-4 h-4" /> {busy ? "Salvando..." : "Salvar"}</Button>
+    </div>
+  );
+}
+
+/* ---------------- PERFIL ---------------- */
+function PerfilTab() {
+  const { user } = useAuth();
+  const [full_name, setFullName] = useState("");
+  const [regType, setRegType] = useState("CRM");
+  const [regNum, setRegNum] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase.from("professional_settings" as never)
+        .select("*").eq("user_id", user.id).maybeSingle();
+      const d = (data ?? {}) as Record<string, string | null>;
+      setFullName(d.full_name ?? "");
+      setRegType(d.registration_type ?? "CRM");
+      setRegNum(d.registration_number ?? "");
+      setSpecialty(d.specialty ?? "");
+      setPhotoPath(d.photo_url ?? null);
+      setPhotoUrl(await resolveAssetUrl(d.photo_url ?? null));
+    })();
+  }, [user?.id]);
+
+  const onPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    const ext = file.name.split(".").pop() || "png";
+    const path = `${user.id}/profile-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("clinic-assets").upload(path, file, { upsert: true });
+    if (error) return toast.error(error.message);
+    setPhotoPath(path);
+    setPhotoUrl(await resolveAssetUrl(path));
+  };
+
+  const save = async () => {
+    if (!user) return;
+    setBusy(true);
+    const { error: e1 } = await supabase.from("professional_settings" as never).upsert({
+      user_id: user.id,
+      full_name, registration_type: regType, registration_number: regNum,
+      specialty, photo_url: photoPath,
+      updated_at: new Date().toISOString(),
+    } as never);
+    // Sync to auth metadata so dashboard greeting reflects the change
+    if (full_name.trim()) {
+      await supabase.auth.updateUser({ data: { full_name: full_name.trim() } });
+    }
+    setBusy(false);
+    if (e1) return toast.error(e1.message);
+    toast.success("Perfil salvo");
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="flex items-center gap-3">
+        <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center overflow-hidden border border-border">
+          {photoUrl ? <img src={photoUrl} alt="Foto" className="w-full h-full object-cover" /> : <span className="text-xl font-bold text-primary">{(full_name || "?").slice(0,1).toUpperCase()}</span>}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium">Foto de perfil</p>
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" onChange={onPhoto} className="hidden" />
+        <Button type="button" variant="secondary" size="sm" onClick={() => fileRef.current?.click()}>
+          <Upload className="w-4 h-4" />
+        </Button>
+      </Card>
+
+      <Field label="Nome completo"><Input value={full_name} onChange={(e) => setFullName(e.target.value)} /></Field>
+      <div className="grid grid-cols-[120px_1fr] gap-2">
+        <Field label="Registro">
+          <select value={regType} onChange={(e) => setRegType(e.target.value)}
+            className="w-full h-12 rounded-lg border border-border bg-card px-3 text-base">
+            {REG_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </Field>
+        <Field label="Número"><Input value={regNum} onChange={(e) => setRegNum(e.target.value)} /></Field>
+      </div>
+      <Field label="Especialidade"><Input value={specialty} onChange={(e) => setSpecialty(e.target.value)} /></Field>
+
+      <Button full onClick={save} disabled={busy}><Save className="w-4 h-4" /> {busy ? "Salvando..." : "Salvar"}</Button>
+    </div>
+  );
+}
