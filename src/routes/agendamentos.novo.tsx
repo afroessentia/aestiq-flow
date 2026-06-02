@@ -173,7 +173,7 @@ function NewAppt() {
                 className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm appearance-none pr-9 focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="" disabled>Selecione um procedimento</option>
-                {PROCEDURES.map((p) => (<option key={p} value={p}>{p}</option>))}
+                {procedures.map((p: string) => (<option key={p} value={p}>{p}</option>))}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
             </div>
