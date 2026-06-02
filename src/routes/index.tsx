@@ -61,11 +61,11 @@ function Dashboard() {
       try {
         const { data } = await supabase
           .from("profiles" as never)
-          .select("full_name,display_name,name,first_name")
+          .select("name,full_name")
           .eq("id", user.id)
           .maybeSingle();
         const d = (data ?? {}) as Record<string, string | null>;
-        const n = d.full_name || d.display_name || d.name || d.first_name || "";
+        const n = d.name || d.full_name || "";
         if (n) setProfileName(n);
       } catch {
         /* no-op */
