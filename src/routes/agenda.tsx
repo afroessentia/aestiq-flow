@@ -169,9 +169,13 @@ function AgendaPage() {
         })}
       </div>
 
-      {dayAppts.length === 0 && (
+      {hoursList.length === 0 && dayAppts.length === 0 && (
+        <div className="mt-4"><EmptyState title="Dia sem expediente" hint="Configure os horários em Configurações." /></div>
+      )}
+      {hoursList.length > 0 && dayAppts.length === 0 && (
         <div className="mt-4"><EmptyState title="Nenhum atendimento neste dia" /></div>
       )}
+
 
       <ApptDialog
         appt={openAppt}
