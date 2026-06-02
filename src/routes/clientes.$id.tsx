@@ -480,19 +480,28 @@ function SessionDialog({
   const [zone, setZone] = useState("");
   const [notes, setNotes] = useState("");
 
-  const reset = () => {
-    setProcedure(""); setProduct(""); setUnits(""); setLot("");
-    setExpiration(""); setZone(""); setNotes("");
-  };
+  useEffect(() => {
+    if (!open) return;
+    if (existing) {
+      setProcedure(existing.procedure || "");
+      setProduct(existing.product || "");
+      setUnits(existing.units != null ? String(existing.units) : "");
+      setLot(existing.product_lot || "");
+      setExpiration(existing.expiration_date || "");
+      setZone(existing.application_zone || "");
+      setNotes(existing.notes || "");
+    } else {
+      setProcedure(""); setProduct(""); setUnits(""); setLot("");
+      setExpiration(""); setZone(""); setNotes("");
+    }
+  }, [open, existing]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
     if (!procedure.trim()) return toast.error("Informe o procedimento");
     setBusy(true);
-    const { error } = await supabase.from("procedures").insert({
-      user_id: userId, client_id: clientId,
-      date: todayISO(),
+    const payload = {
       procedure: procedure.trim(),
       product: product || null,
       units: units ? Number(units) : null,
@@ -500,12 +509,18 @@ function SessionDialog({
       expiration_date: expiration || null,
       application_zone: zone || null,
       notes: notes || null,
-      days_until_return: 15,
-    });
+    };
+    const { error } = existing
+      ? await supabase.from("procedures").update(payload).eq("id", existing.id)
+      : await supabase.from("procedures").insert({
+          ...payload,
+          user_id: userId, client_id: clientId,
+          date: todayISO(),
+          days_until_return: 15,
+        });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Sessão registrada!");
-    reset();
+    toast.success(existing ? "Sessão atualizada!" : "Sessão registrada!");
     onSaved();
   };
 
@@ -513,7 +528,7 @@ function SessionDialog({
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nova sessão</DialogTitle>
+          <DialogTitle>{existing ? "Editar sessão" : "Nova sessão"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <Field label="Nome do procedimento">
@@ -542,7 +557,7 @@ function SessionDialog({
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
           </Field>
           <Button type="submit" full disabled={busy}>
-            <Save className="w-4 h-4" /> {busy ? "Salvando..." : "Salvar sessão"}
+            <Save className="w-4 h-4" /> {busy ? "Salvando..." : existing ? "Salvar alterações" : "Salvar sessão"}
           </Button>
         </form>
       </DialogContent>
