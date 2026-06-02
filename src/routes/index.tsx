@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
 });
 
 interface Appt { id: string; client_name: string; procedure: string; time: string; notes: string | null; }
-interface Ret { id: string; procedure: string; return_date: string; clients: { id: string; name: string; phone: string | null } | null; }
+interface Ret { id: string; procedure: string; return_date: string; client_name: string; clients: { id: string; name: string; phone: string | null } | null; }
 
 function Dashboard() {
   const { user } = useAuth();
@@ -42,9 +42,9 @@ function Dashboard() {
       const [a, r] = await Promise.all([
         supabase.from("appointments").select("id,client_name,procedure,time,notes").eq("date", today).order("time"),
         supabase
-          .from("procedures")
-          .select("id,procedure,return_date,clients(id,name,phone)")
-          .eq("return_done", false)
+          .from("appointments")
+          .select("id,procedure,return_date,client_name,clients(id,name,phone)")
+          .not("return_date", "is", null)
           .lte("return_date", today)
           .order("return_date", { ascending: true })
           .limit(10),
