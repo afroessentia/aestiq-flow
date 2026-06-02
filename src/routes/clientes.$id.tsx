@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, FileText, Plus, MessageCircle, Camera, Save, Trash2, X } from "lucide-react";
+import { ChevronLeft, FileText, Plus, MessageCircle, Camera, Save, Trash2, X, Pencil } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, EmptyState, Field, Input, Label, SectionTitle, Textarea } from "@/components/u";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
