@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, FileText, Plus, MessageCircle, Camera, Save, Trash2, X } from "lucide-react";
+import { ChevronLeft, FileText, Plus, MessageCircle, Camera, Save, Trash2, X, Pencil } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, EmptyState, Field, Input, Label, SectionTitle, Textarea } from "@/components/u";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -60,6 +60,7 @@ function ClientePage() {
   const [newBefore, setNewBefore] = useState<File | null>(null);
   const [newAfter, setNewAfter] = useState<File | null>(null);
   const [showNewSession, setShowNewSession] = useState(false);
+  const [editSession, setEditSession] = useState<Proc | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const reloadProcs = async () => {
@@ -413,8 +414,8 @@ function ClientePage() {
               {procs.map(p => {
                 const thumb = thumbs[p.id]?.before;
                 return (
-                  <Link key={p.id} to="/clientes/$id/sessoes/$sid" params={{ id, sid: p.id }}>
-                    <Card className="flex gap-3 active:bg-surface">
+                  <Card key={p.id} className="flex gap-3 items-center">
+                    <Link to="/clientes/$id/sessoes/$sid" params={{ id, sid: p.id }} className="flex gap-3 flex-1 min-w-0 active:opacity-80">
                       <div className="w-14 h-14 rounded-lg bg-surface overflow-hidden shrink-0 flex items-center justify-center">
                         {thumb
                           ? <img src={thumb} alt="" className="w-full h-full object-cover" />
@@ -427,8 +428,16 @@ function ClientePage() {
                           <p className="text-xs text-muted-foreground truncate">{p.application_zone}{p.units ? ` · ${p.units}U` : ""}</p>
                         )}
                       </div>
-                    </Card>
-                  </Link>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setEditSession(p)}
+                      className="p-2 rounded-md text-muted-foreground hover:text-primary"
+                      aria-label="Editar sessão"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </Card>
                 );
               })}
             </div>
@@ -436,22 +445,31 @@ function ClientePage() {
         </section>
       </main>
 
-      <NewSessionDialog
+      <SessionDialog
         open={showNewSession}
         onClose={() => setShowNewSession(false)}
         onSaved={async () => { setShowNewSession(false); await reloadProcs(); }}
         clientId={id}
         userId={user?.id ?? null}
+        existing={null}
+      />
+      <SessionDialog
+        open={!!editSession}
+        onClose={() => setEditSession(null)}
+        onSaved={async () => { setEditSession(null); await reloadProcs(); }}
+        clientId={id}
+        userId={user?.id ?? null}
+        existing={editSession}
       />
     </div>
   );
 }
 
-function NewSessionDialog({
-  open, onClose, onSaved, clientId, userId,
+function SessionDialog({
+  open, onClose, onSaved, clientId, userId, existing,
 }: {
   open: boolean; onClose: () => void; onSaved: () => void;
-  clientId: string; userId: string | null;
+  clientId: string; userId: string | null; existing: Proc | null;
 }) {
   const [busy, setBusy] = useState(false);
   const [procedure, setProcedure] = useState("");
@@ -462,19 +480,28 @@ function NewSessionDialog({
   const [zone, setZone] = useState("");
   const [notes, setNotes] = useState("");
 
-  const reset = () => {
-    setProcedure(""); setProduct(""); setUnits(""); setLot("");
-    setExpiration(""); setZone(""); setNotes("");
-  };
+  useEffect(() => {
+    if (!open) return;
+    if (existing) {
+      setProcedure(existing.procedure || "");
+      setProduct(existing.product || "");
+      setUnits(existing.units != null ? String(existing.units) : "");
+      setLot(existing.product_lot || "");
+      setExpiration(existing.expiration_date || "");
+      setZone(existing.application_zone || "");
+      setNotes(existing.notes || "");
+    } else {
+      setProcedure(""); setProduct(""); setUnits(""); setLot("");
+      setExpiration(""); setZone(""); setNotes("");
+    }
+  }, [open, existing]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
     if (!procedure.trim()) return toast.error("Informe o procedimento");
     setBusy(true);
-    const { error } = await supabase.from("procedures").insert({
-      user_id: userId, client_id: clientId,
-      date: todayISO(),
+    const payload = {
       procedure: procedure.trim(),
       product: product || null,
       units: units ? Number(units) : null,
@@ -482,12 +509,18 @@ function NewSessionDialog({
       expiration_date: expiration || null,
       application_zone: zone || null,
       notes: notes || null,
-      days_until_return: 15,
-    });
+    };
+    const { error } = existing
+      ? await supabase.from("procedures").update(payload).eq("id", existing.id)
+      : await supabase.from("procedures").insert({
+          ...payload,
+          user_id: userId, client_id: clientId,
+          date: todayISO(),
+          days_until_return: 15,
+        });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Sessão registrada!");
-    reset();
+    toast.success(existing ? "Sessão atualizada!" : "Sessão registrada!");
     onSaved();
   };
 
@@ -495,7 +528,7 @@ function NewSessionDialog({
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nova sessão</DialogTitle>
+          <DialogTitle>{existing ? "Editar sessão" : "Nova sessão"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <Field label="Nome do procedimento">
@@ -524,7 +557,7 @@ function NewSessionDialog({
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
           </Field>
           <Button type="submit" full disabled={busy}>
-            <Save className="w-4 h-4" /> {busy ? "Salvando..." : "Salvar sessão"}
+            <Save className="w-4 h-4" /> {busy ? "Salvando..." : existing ? "Salvar alterações" : "Salvar sessão"}
           </Button>
         </form>
       </DialogContent>

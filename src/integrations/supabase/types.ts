@@ -82,7 +82,9 @@ export type Database = {
           deposit_amount: number | null
           id: string
           notes: string | null
+          pix_status: string
           procedure: string
+          return_date: string | null
           status: string
           time: string
           user_id: string
@@ -95,7 +97,9 @@ export type Database = {
           deposit_amount?: number | null
           id?: string
           notes?: string | null
+          pix_status?: string
           procedure: string
+          return_date?: string | null
           status?: string
           time: string
           user_id: string
@@ -108,7 +112,9 @@ export type Database = {
           deposit_amount?: number | null
           id?: string
           notes?: string | null
+          pix_status?: string
           procedure?: string
+          return_date?: string | null
           status?: string
           time?: string
           user_id?: string

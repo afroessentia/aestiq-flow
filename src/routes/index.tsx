@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
 });
 
 interface Appt { id: string; client_name: string; procedure: string; time: string; notes: string | null; }
-interface Ret { id: string; procedure: string; return_date: string; clients: { id: string; name: string; phone: string | null } | null; }
+interface Ret { id: string; procedure: string; return_date: string; client_name: string; clients: { id: string; name: string; phone: string | null } | null; }
 
 function Dashboard() {
   const { user } = useAuth();
@@ -42,9 +42,9 @@ function Dashboard() {
       const [a, r] = await Promise.all([
         supabase.from("appointments").select("id,client_name,procedure,time,notes").eq("date", today).order("time"),
         supabase
-          .from("procedures")
-          .select("id,procedure,return_date,clients(id,name,phone)")
-          .eq("return_done", false)
+          .from("appointments")
+          .select("id,procedure,return_date,client_name,clients(id,name,phone)")
+          .not("return_date", "is", null)
           .lte("return_date", today)
           .order("return_date", { ascending: true })
           .limit(10),
@@ -124,7 +124,7 @@ function Dashboard() {
               <Card key={r.id} className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center font-semibold">!</div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{r.clients?.name ?? "Cliente"}</p>
+                  <p className="font-semibold truncate">{r.clients?.name ?? r.client_name ?? "Cliente"}</p>
                   <p className="text-xs text-muted-foreground truncate">{r.procedure} • retorno {fmtDate(r.return_date)}</p>
                 </div>
                 {r.clients?.phone ? (
