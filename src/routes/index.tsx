@@ -56,8 +56,16 @@ function Dashboard() {
 
   useEffect(() => {
     if (metaName || !user?.id) return;
-    // Fallback: try profiles table for a display name. Table may not exist — ignore errors.
     (async () => {
+      try {
+        const { data: prof } = await supabase
+          .from("professional_settings" as never)
+          .select("full_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const pn = (prof as { full_name?: string | null } | null)?.full_name || "";
+        if (pn) { setProfileName(pn); return; }
+      } catch { /* no-op */ }
       try {
         const { data } = await supabase
           .from("profiles" as never)
@@ -67,11 +75,10 @@ function Dashboard() {
         const d = (data ?? {}) as Record<string, string | null>;
         const n = d.name || d.full_name || "";
         if (n) setProfileName(n);
-      } catch {
-        /* no-op */
-      }
+      } catch { /* no-op */ }
     })();
   }, [user?.id, metaName]);
+
 
   return (
     <AppShell title="AESTIQ">

@@ -19,11 +19,11 @@ export const Route = createFileRoute("/agendamentos/novo")({
   component: () => (<AuthGate><NewAppt /></AuthGate>),
 });
 
-const PIX_KEY = "contato@aestiq.com.br";
-const MERCHANT = "AESTIQ ESTETICA";
+const DEFAULT_PIX_KEY = "contato@aestiq.com.br";
+const DEFAULT_MERCHANT = "AESTIQ ESTETICA";
 const CITY = "SAO PAULO";
 
-const PROCEDURES = [
+const DEFAULT_PROCEDURES = [
   "Toxina Botulínica",
   "Preenchimento Labial",
   "Preenchimento Malar",
@@ -32,6 +32,7 @@ const PROCEDURES = [
   "Peeling Químico",
   "Limpeza de Pele",
 ];
+
 
 interface ClientRow { id: string; name: string }
 
@@ -51,13 +52,26 @@ function NewAppt() {
   const [notes, setNotes] = useState("");
   const [deposit, setDeposit] = useState("");
   const [busy, setBusy] = useState(false);
+  const [procedures, setProcedures] = useState<string[]>(DEFAULT_PROCEDURES);
+  const [pixKey, setPixKey] = useState(DEFAULT_PIX_KEY);
+  const [merchant, setMerchant] = useState(DEFAULT_MERCHANT);
 
   useEffect(() => {
     if (!user) return;
     supabase.from("clients").select("id,name").order("name").then(({ data }) => {
       setClients(data ?? []);
     });
+    supabase.from("clinic_procedures" as never).select("name").eq("user_id", user.id).order("name").then(({ data }) => {
+      const list = ((data as unknown as { name: string }[]) ?? []).map((p) => p.name);
+      if (list.length > 0) setProcedures(list);
+    });
+    supabase.from("clinic_settings" as never).select("pix_key,clinic_name").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+      const d = (data ?? {}) as { pix_key?: string | null; clinic_name?: string | null };
+      if (d.pix_key) setPixKey(d.pix_key);
+      if (d.clinic_name) setMerchant(d.clinic_name.toUpperCase().slice(0, 25));
+    });
   }, [user]);
+
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -77,9 +91,10 @@ function NewAppt() {
 
   const amount = Number(deposit.replace(",", ".")) || 0;
   const pixPayload = useMemo(
-    () => buildPixPayload({ key: PIX_KEY, merchant: MERCHANT, city: CITY, amount: amount > 0 ? amount : undefined }),
-    [amount],
+    () => buildPixPayload({ key: pixKey, merchant, city: CITY, amount: amount > 0 ? amount : undefined }),
+    [amount, pixKey, merchant],
   );
+
 
   const pickClient = (c: ClientRow) => {
     setClientId(c.id);
@@ -158,7 +173,7 @@ function NewAppt() {
                 className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm appearance-none pr-9 focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="" disabled>Selecione um procedimento</option>
-                {PROCEDURES.map((p) => (<option key={p} value={p}>{p}</option>))}
+                {procedures.map((p: string) => (<option key={p} value={p}>{p}</option>))}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
             </div>
@@ -178,7 +193,7 @@ function NewAppt() {
             <div className="flex items-center justify-center bg-card rounded-lg p-3 mb-3">
               <img src={qrUrl(pixPayload)} alt="QR Code Pix" className="w-56 h-56" />
             </div>
-            <p className="text-xs text-muted-foreground mb-2">Chave: <span className="text-foreground font-medium">{PIX_KEY}</span></p>
+            <p className="text-xs text-muted-foreground mb-2">Chave: <span className="text-foreground font-medium">{pixKey}</span></p>
             <textarea readOnly value={pixPayload} className="w-full text-[10px] font-mono p-2 rounded border border-border bg-card h-16 resize-none" />
             <Button
               type="button" variant="secondary" full size="md" className="mt-2"

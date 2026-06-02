@@ -50,11 +50,14 @@ function isoDate(d: Date) {
   return new Date(d.getTime() - tz).toISOString().slice(0, 10);
 }
 
+interface WH { weekday: number; enabled: boolean; start_time: string | null; end_time: string | null; }
+
 function AgendaPage() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [selected, setSelected] = useState<Date>(new Date());
   const [appts, setAppts] = useState<Appt[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [workHours, setWorkHours] = useState<Record<number, WH>>({});
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart); d.setDate(d.getDate() + i); return d;
@@ -71,12 +74,34 @@ function AgendaPage() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [days]);
 
+  useEffect(() => {
+    supabase.from("work_hours" as never).select("weekday,enabled,start_time,end_time").then(({ data }) => {
+      const map: Record<number, WH> = {};
+      ((data as unknown as WH[]) ?? []).forEach((r) => { map[r.weekday] = r; });
+      setWorkHours(map);
+    });
+  }, []);
+
   const selectedISO = isoDate(selected);
   const dayAppts = appts.filter(a => a.date === selectedISO);
   const byHour: Record<string, Appt | undefined> = {};
   for (const a of dayAppts) byHour[fmtTime(a.time)] = a;
 
+  const wh = workHours[selected.getDay()];
+  const hoursList = useMemo(() => {
+    if (!wh || !wh.enabled || !wh.start_time || !wh.end_time) {
+      // If no schedule configured for any day, fall back to default; otherwise empty.
+      return Object.keys(workHours).length === 0 ? HOURS : [];
+    }
+    const s = parseInt(wh.start_time.slice(0, 2), 10);
+    const e = parseInt(wh.end_time.slice(0, 2), 10);
+    const out: string[] = [];
+    for (let h = s; h < e; h++) out.push(`${h.toString().padStart(2, "0")}:00`);
+    return out;
+  }, [wh, workHours]);
+
   const openAppt = appts.find(a => a.id === openId) ?? null;
+
 
   return (
     <AppShell title="Agenda semanal">
@@ -114,7 +139,7 @@ function AgendaPage() {
       </Link>
 
       <div className="space-y-2">
-        {HOURS.map((h) => {
+        {hoursList.map((h) => {
           const a = byHour[h];
           return (
             <div key={h} className="flex gap-3">
@@ -144,9 +169,13 @@ function AgendaPage() {
         })}
       </div>
 
-      {dayAppts.length === 0 && (
+      {hoursList.length === 0 && dayAppts.length === 0 && (
+        <div className="mt-4"><EmptyState title="Dia sem expediente" hint="Configure os horários em Configurações." /></div>
+      )}
+      {hoursList.length > 0 && dayAppts.length === 0 && (
         <div className="mt-4"><EmptyState title="Nenhum atendimento neste dia" /></div>
       )}
+
 
       <ApptDialog
         appt={openAppt}

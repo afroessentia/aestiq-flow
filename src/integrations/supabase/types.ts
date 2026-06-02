@@ -171,6 +171,72 @@ export type Database = {
         }
         Relationships: []
       }
+      clinic_procedures: {
+        Row: {
+          created_at: string
+          default_price: number | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_price?: number | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_price?: number | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clinic_settings: {
+        Row: {
+          address: string | null
+          clinic_name: string | null
+          cnpj: string | null
+          created_at: string
+          logo_url: string | null
+          phone: string | null
+          pix_key: string | null
+          pix_key_type: string | null
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: string | null
+          clinic_name?: string | null
+          cnpj?: string | null
+          created_at?: string
+          logo_url?: string | null
+          phone?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string | null
+          clinic_name?: string | null
+          cnpj?: string | null
+          created_at?: string
+          logo_url?: string | null
+          phone?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       facial_markers: {
         Row: {
           client_id: string
@@ -274,6 +340,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      professional_settings: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          photo_url: string | null
+          registration_number: string | null
+          registration_type: string | null
+          specialty: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          photo_url?: string | null
+          registration_number?: string | null
+          registration_type?: string | null
+          specialty?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          photo_url?: string | null
+          registration_number?: string | null
+          registration_type?: string | null
+          specialty?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      work_hours: {
+        Row: {
+          enabled: boolean
+          end_time: string | null
+          id: string
+          start_time: string | null
+          updated_at: string
+          user_id: string
+          weekday: number
+        }
+        Insert: {
+          enabled?: boolean
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          updated_at?: string
+          user_id: string
+          weekday: number
+        }
+        Update: {
+          enabled?: boolean
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          updated_at?: string
+          user_id?: string
+          weekday?: number
+        }
+        Relationships: []
       }
     }
     Views: {
