@@ -14,6 +14,7 @@ function LoginPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +35,10 @@ function LoginPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: fullName.trim() },
+          },
         });
         if (error) throw error;
         toast.success("Cadastro realizado!");
@@ -63,6 +67,18 @@ function LoginPage() {
         </div>
 
         <form onSubmit={submit} className="space-y-4">
+          {mode === "signup" && (
+            <Field label="Nome completo">
+              <Input
+                type="text"
+                required
+                autoComplete="name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Seu nome completo"
+              />
+            </Field>
+          )}
           <Field label="E-mail">
             <Input
               type="email"
