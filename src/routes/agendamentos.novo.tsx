@@ -193,7 +193,7 @@ function NewAppt() {
             <div className="flex items-center justify-center bg-card rounded-lg p-3 mb-3">
               <img src={qrUrl(pixPayload)} alt="QR Code Pix" className="w-56 h-56" />
             </div>
-            <p className="text-xs text-muted-foreground mb-2">Chave: <span className="text-foreground font-medium">{PIX_KEY}</span></p>
+            <p className="text-xs text-muted-foreground mb-2">Chave: <span className="text-foreground font-medium">{pixKey}</span></p>
             <textarea readOnly value={pixPayload} className="w-full text-[10px] font-mono p-2 rounded border border-border bg-card h-16 resize-none" />
             <Button
               type="button" variant="secondary" full size="md" className="mt-2"
