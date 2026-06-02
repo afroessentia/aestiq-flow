@@ -91,9 +91,10 @@ function NewAppt() {
 
   const amount = Number(deposit.replace(",", ".")) || 0;
   const pixPayload = useMemo(
-    () => buildPixPayload({ key: PIX_KEY, merchant: MERCHANT, city: CITY, amount: amount > 0 ? amount : undefined }),
-    [amount],
+    () => buildPixPayload({ key: pixKey, merchant, city: CITY, amount: amount > 0 ? amount : undefined }),
+    [amount, pixKey, merchant],
   );
+
 
   const pickClient = (c: ClientRow) => {
     setClientId(c.id);
