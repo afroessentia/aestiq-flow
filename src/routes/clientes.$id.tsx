@@ -445,22 +445,31 @@ function ClientePage() {
         </section>
       </main>
 
-      <NewSessionDialog
+      <SessionDialog
         open={showNewSession}
         onClose={() => setShowNewSession(false)}
         onSaved={async () => { setShowNewSession(false); await reloadProcs(); }}
         clientId={id}
         userId={user?.id ?? null}
+        existing={null}
+      />
+      <SessionDialog
+        open={!!editSession}
+        onClose={() => setEditSession(null)}
+        onSaved={async () => { setEditSession(null); await reloadProcs(); }}
+        clientId={id}
+        userId={user?.id ?? null}
+        existing={editSession}
       />
     </div>
   );
 }
 
-function NewSessionDialog({
-  open, onClose, onSaved, clientId, userId,
+function SessionDialog({
+  open, onClose, onSaved, clientId, userId, existing,
 }: {
   open: boolean; onClose: () => void; onSaved: () => void;
-  clientId: string; userId: string | null;
+  clientId: string; userId: string | null; existing: Proc | null;
 }) {
   const [busy, setBusy] = useState(false);
   const [procedure, setProcedure] = useState("");
