@@ -124,7 +124,7 @@ function Dashboard() {
               <Card key={r.id} className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center font-semibold">!</div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{r.clients?.name ?? "Cliente"}</p>
+                  <p className="font-semibold truncate">{r.clients?.name ?? r.client_name ?? "Cliente"}</p>
                   <p className="text-xs text-muted-foreground truncate">{r.procedure} • retorno {fmtDate(r.return_date)}</p>
                 </div>
                 {r.clients?.phone ? (
