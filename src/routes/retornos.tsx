@@ -37,11 +37,14 @@ function RetornosPage() {
 
   const load = async () => {
     const today = todayISO();
+    const in7 = new Date();
+    in7.setDate(in7.getDate() + 7);
+    const horizon = in7.toISOString().slice(0, 10);
     const { data } = await supabase
       .from("appointments")
       .select("id,client_id,client_name,procedure,date,return_date,status,clients(id,name,phone)")
       .not("return_date", "is", null)
-      .lte("return_date", today)
+      .lte("return_date", horizon)
       .order("return_date", { ascending: true });
     const rows = ((data as unknown as ApptRow[]) || []);
 
