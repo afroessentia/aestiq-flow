@@ -139,7 +139,7 @@ function AgendaPage() {
       </Link>
 
       <div className="space-y-2">
-        {HOURS.map((h) => {
+        {hoursList.map((h) => {
           const a = byHour[h];
           return (
             <div key={h} className="flex gap-3">
