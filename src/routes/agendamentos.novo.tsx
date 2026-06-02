@@ -19,11 +19,11 @@ export const Route = createFileRoute("/agendamentos/novo")({
   component: () => (<AuthGate><NewAppt /></AuthGate>),
 });
 
-const PIX_KEY = "contato@aestiq.com.br";
-const MERCHANT = "AESTIQ ESTETICA";
+const DEFAULT_PIX_KEY = "contato@aestiq.com.br";
+const DEFAULT_MERCHANT = "AESTIQ ESTETICA";
 const CITY = "SAO PAULO";
 
-const PROCEDURES = [
+const DEFAULT_PROCEDURES = [
   "Toxina Botulínica",
   "Preenchimento Labial",
   "Preenchimento Malar",
@@ -32,6 +32,7 @@ const PROCEDURES = [
   "Peeling Químico",
   "Limpeza de Pele",
 ];
+
 
 interface ClientRow { id: string; name: string }
 
