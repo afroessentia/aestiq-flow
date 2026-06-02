@@ -67,6 +67,18 @@ function LoginPage() {
         </div>
 
         <form onSubmit={submit} className="space-y-4">
+          {mode === "signup" && (
+            <Field label="Nome completo">
+              <Input
+                type="text"
+                required
+                autoComplete="name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Seu nome completo"
+              />
+            </Field>
+          )}
           <Field label="E-mail">
             <Input
               type="email"
