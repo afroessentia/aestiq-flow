@@ -160,9 +160,122 @@ function ClinicaTab() {
       </Card>
 
       <Button full onClick={save} disabled={busy}><Save className="w-4 h-4" /> {busy ? "Salvando..." : "Salvar"}</Button>
+
+      <ExportData userId={user?.id ?? null} />
     </div>
   );
 }
+
+/* ---------------- EXPORT DATA ---------------- */
+function csvEscape(v: unknown): string {
+  if (v == null) return "";
+  const s = String(v);
+  return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function downloadCsv(filename: string, headers: string[], rows: (string | number | null)[][]) {
+  const lines = [headers.join(","), ...rows.map((r) => r.map(csvEscape).join(","))];
+  const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function ExportData({ userId }: { userId: string | null }) {
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  const exportClients = async () => {
+    if (!userId) return;
+    setBusyKey("clients");
+    try {
+      const { data: clients, error } = await supabase
+        .from("clients")
+        .select("id,name,phone,email,birth_date,notes,lgpd_consent_at")
+        .order("name");
+      if (error) throw error;
+      const ids = (clients ?? []).map((c) => c.id);
+      const allergiesMap: Record<string, string> = {};
+      if (ids.length > 0) {
+        const { data: ans } = await supabase
+          .from("anamnesis").select("client_id,allergies").in("client_id", ids);
+        (ans ?? []).forEach((a) => { if (a.allergies) allergiesMap[a.client_id] = a.allergies; });
+      }
+      downloadCsv(
+        "clientes.csv",
+        ["Nome", "WhatsApp", "E-mail", "Data de nascimento", "Alergias", "Consentimento LGPD"],
+        (clients ?? []).map((c) => [
+          c.name,
+          c.phone ?? "",
+          c.email ?? "",
+          c.birth_date ?? "",
+          allergiesMap[c.id] ?? c.notes ?? "",
+          c.lgpd_consent_at ? new Date(c.lgpd_consent_at).toLocaleString("pt-BR") : "",
+        ]),
+      );
+      toast.success("Clientes exportados");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erro ao exportar");
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const exportFinancial = async () => {
+    if (!userId) return;
+    setBusyKey("fin");
+    try {
+      const { data: appts, error } = await supabase
+        .from("appointments")
+        .select("id,client_name,procedure,date,total_amount,deposit_amount")
+        .order("date", { ascending: false });
+      if (error) throw error;
+      const ids = (appts ?? []).map((a) => a.id);
+      const entriesMap: Record<string, { status: string; payment_method: string | null }> = {};
+      if (ids.length > 0) {
+        const { data: ens } = await supabase
+          .from("financial_entries").select("appointment_id,status,payment_method").in("appointment_id", ids);
+        (ens ?? []).forEach((e) => { if (e.appointment_id) entriesMap[e.appointment_id] = { status: e.status, payment_method: e.payment_method }; });
+      }
+      const methodLabel: Record<string, string> = { pix: "Pix", dinheiro: "Dinheiro", cartao: "Cartão", outro: "Outro" };
+      const statusLabel: Record<string, string> = { pago: "Pago", pendente: "Pendente" };
+      downloadCsv(
+        "financeiro.csv",
+        ["Cliente", "Procedimento", "Data", "Valor total", "Status pagamento", "Forma de pagamento"],
+        (appts ?? []).map((a) => {
+          const en = entriesMap[a.id];
+          const total = a.total_amount ?? a.deposit_amount ?? 0;
+          return [
+            a.client_name,
+            a.procedure,
+            a.date,
+            Number(total).toFixed(2).replace(".", ","),
+            en ? (statusLabel[en.status] ?? en.status) : "Pendente",
+            en?.payment_method ? (methodLabel[en.payment_method] ?? en.payment_method) : "",
+          ];
+        }),
+      );
+      toast.success("Financeiro exportado");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erro ao exportar");
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  return (
+    <Card className="space-y-3">
+      <p className="text-sm font-semibold">Exportar dados</p>
+      <Button variant="secondary" full onClick={exportClients} disabled={busyKey === "clients"}>
+        <Download className="w-4 h-4" /> {busyKey === "clients" ? "Exportando..." : "Exportar clientes (CSV)"}
+      </Button>
+      <Button variant="secondary" full onClick={exportFinancial} disabled={busyKey === "fin"}>
+        <Download className="w-4 h-4" /> {busyKey === "fin" ? "Exportando..." : "Exportar financeiro (CSV)"}
+      </Button>
+    </Card>
+  );
+}
+
 
 /* ---------------- PROCEDIMENTOS ---------------- */
 interface Proc { id: string; name: string; default_price: number | null; }
