@@ -234,8 +234,9 @@ function ApptDialog({ appt, onClose, onSaved }: { appt: Appt | null; onClose: ()
         updated_at: new Date().toISOString(),
       }).eq("id", ex.id);
     } else {
+      const { data: u } = await supabase.auth.getUser();
       await supabase.from("financial_entries").insert({
-        user_id: appt.clients ? undefined as never : undefined as never,
+        user_id: u.user?.id,
         appointment_id: appt.id,
         client_name: appt.client_name,
         procedure: appt.procedure,
