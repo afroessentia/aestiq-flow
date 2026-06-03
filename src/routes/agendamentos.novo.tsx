@@ -180,7 +180,12 @@ function NewAppt() {
               <select
                 required
                 value={procedure}
-                onChange={(e) => setProc(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setProc(v);
+                  const price = procPrices[v];
+                  if (price != null && price > 0) setTotalAmount(String(price).replace(".", ","));
+                }}
                 className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm appearance-none pr-9 focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="" disabled>Selecione um procedimento</option>
