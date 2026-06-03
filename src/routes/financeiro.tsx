@@ -22,7 +22,9 @@ interface Appt {
   procedure: string;
   date: string;
   deposit_amount: number | null;
+  total_amount: number | null;
 }
+
 
 interface Entry {
   id: string;
