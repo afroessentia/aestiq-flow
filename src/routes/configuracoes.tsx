@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, Plus, Trash2, Upload, Save } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Upload, Save, Download } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, Field, Input } from "@/components/u";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
