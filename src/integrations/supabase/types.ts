@@ -273,6 +273,48 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_entries: {
+        Row: {
+          amount: number
+          appointment_id: string | null
+          client_name: string
+          created_at: string
+          entry_date: string
+          id: string
+          payment_method: string | null
+          procedure: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          appointment_id?: string | null
+          client_name: string
+          created_at?: string
+          entry_date: string
+          id?: string
+          payment_method?: string | null
+          procedure: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: string | null
+          client_name?: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          payment_method?: string | null
+          procedure?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       procedures: {
         Row: {
           after_photo: string | null
