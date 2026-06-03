@@ -19,9 +19,14 @@ export const Route = createFileRoute("/agendamentos/novo")({
   component: () => (<AuthGate><NewAppt /></AuthGate>),
 });
 
-const DEFAULT_PIX_KEY = "contato@aestiq.com.br";
-const DEFAULT_MERCHANT = "AESTIQ ESTETICA";
-const CITY = "SAO PAULO";
+const DEFAULT_PIX_KEY = "";
+const PIX_TYPE_LABEL: Record<string, string> = {
+  cpf: "CPF",
+  cnpj: "CNPJ",
+  email: "E-mail",
+  telefone: "Telefone",
+  aleatoria: "Chave aleatória",
+};
 
 const DEFAULT_PROCEDURES = [
   "Toxina Botulínica",
@@ -32,6 +37,7 @@ const DEFAULT_PROCEDURES = [
   "Peeling Químico",
   "Limpeza de Pele",
 ];
+
 
 
 interface ClientRow { id: string; name: string }
