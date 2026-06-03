@@ -163,6 +163,40 @@ function Dashboard() {
           </div>
         )}
       </div>
+
+      <div className="mt-8">
+        <SectionTitle>Aniversários esta semana</SectionTitle>
+        {loading ? null : birthdays.length === 0 ? (
+          <EmptyState title="Nenhum aniversário esta semana" />
+        ) : (
+          <div className="space-y-2">
+            {birthdays.map((b) => (
+              <Card key={b.id} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                  <Cake className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{b.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {fmtBirthdayLabel(b.birth_date)} • faz {b.age} anos
+                    {b.days === 0 ? " • hoje" : b.days === 1 ? " • amanhã" : ` • em ${b.days} dias`}
+                  </p>
+                </div>
+                {b.phone ? (
+                  <a
+                    href={waLink(b.phone, `Olá ${b.name}, a equipe AESTIQ deseja um feliz aniversário! 🎂`)}
+                    target="_blank" rel="noreferrer"
+                    className="p-2 rounded-md bg-surface text-primary"
+                    aria-label="WhatsApp"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                  </a>
+                ) : null}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }
