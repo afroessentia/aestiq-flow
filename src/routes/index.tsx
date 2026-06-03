@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
   ),
 });
 
-interface Appt { id: string; client_name: string; procedure: string; time: string; notes: string | null; }
+interface Appt { id: string; client_name: string; procedure: string; time: string; notes: string | null; status: string | null; }
 interface Ret { id: string; procedure: string; return_date: string; client_name: string; clients: { id: string; name: string; phone: string | null } | null; }
 interface BClient { id: string; name: string; phone: string | null; birth_date: string; days: number; age: number; }
 
@@ -41,7 +41,7 @@ function Dashboard() {
     const load = async () => {
       const today = todayISO();
       const [a, r, c] = await Promise.all([
-        supabase.from("appointments").select("id,client_name,procedure,time,notes").eq("date", today).order("time"),
+        supabase.from("appointments").select("id,client_name,procedure,time,notes,status").eq("date", today).in("status", ["agendado", "confirmado"]).order("time"),
         supabase
           .from("appointments")
           .select("id,procedure,return_date,client_name,clients(id,name,phone)")
@@ -115,7 +115,7 @@ function Dashboard() {
       ) : appts.length === 0 ? (
         <EmptyState title="Nenhum atendimento hoje" hint="Aproveite para organizar a semana." />
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {appts.map((a) => (
             <Card key={a.id} className="flex items-center gap-3">
               <div className="text-center bg-surface rounded-lg px-3 py-2 min-w-[64px]">
