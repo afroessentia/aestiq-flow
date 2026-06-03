@@ -70,8 +70,11 @@ function NewAppt() {
       setClients(data ?? []);
     });
     supabase.from("clinic_procedures" as never).select("name,default_price").eq("user_id", user.id).order("name").then(({ data }) => {
-      const list = ((data as unknown as { name: string }[]) ?? []).map((p) => p.name);
-      if (list.length > 0) setProcedures(list);
+      const rows = (data as unknown as { name: string; default_price: number | null }[]) ?? [];
+      if (rows.length > 0) setProcedures(rows.map((p) => p.name));
+      const prices: Record<string, number> = {};
+      rows.forEach((p) => { if (p.default_price != null) prices[p.name] = Number(p.default_price); });
+      setProcPrices(prices);
     });
     supabase.from("clinic_settings" as never).select("pix_key,pix_key_type").eq("user_id", user.id).maybeSingle().then(({ data }) => {
       const d = (data ?? {}) as { pix_key?: string | null; pix_key_type?: string | null };
