@@ -403,7 +403,7 @@ function ExportData({ userId }: { userId: string | null }) {
         { h: "Status", w: 95 },
       ];
       const drawHeader = () => {
-        pdf.setFillColor(240); pdf.rect(margin, y2, pageW - margin * 2, 18, "F");
+        pdf.setFillColor(240, 240, 240); pdf.rect(margin, y2, pageW - margin * 2, 18, "F");
         pdf.setFont("helvetica", "bold"); pdf.setFontSize(9); pdf.setTextColor(20);
         let x = margin + 4;
         cols.forEach((c) => { pdf.text(c.h, x, y2 + 12); x += c.w; });
