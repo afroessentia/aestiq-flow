@@ -269,9 +269,14 @@ function ClientePage() {
               </div>
             </label>
 
+            <Button variant="secondary" full onClick={() => generateConsentPDF(c, procs[0] ?? null, user?.id ?? null)}>
+              <FileSignature className="w-4 h-4" /> Gerar termo de consentimento
+            </Button>
+
             <Button full onClick={saveHeader} disabled={savingHeader}>
               <Save className="w-4 h-4" /> {savingHeader ? "Salvando..." : "Salvar dados"}
             </Button>
+
           </div>
 
           <div className="mt-4">
