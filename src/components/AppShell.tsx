@@ -21,6 +21,7 @@ export function AppShell({ title, children, right }: { title: string; children: 
   const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const logoUrl = useLogoUrl();
+  const clinicName = useClinicName();
   const isHome = path === "/";
   const [hasBirthdays, setHasBirthdays] = useState(false);
 
