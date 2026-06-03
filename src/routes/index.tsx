@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Calendar, MessageCircle, ChevronRight } from "lucide-react";
+import { Plus, Calendar, MessageCircle, ChevronRight, Cake } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { AppShell } from "@/components/AppShell";
 import { Button, Card, EmptyState, SectionTitle } from "@/components/u";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { fmtDate, fmtTime, todayISO, waLink } from "@/lib/format";
+import { fmtBirthdayLabel, turningAge, upcomingBirthdayDays } from "@/lib/birthday";
 
 export const Route = createFileRoute("/")({
   component: () => (
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/")({
 
 interface Appt { id: string; client_name: string; procedure: string; time: string; notes: string | null; }
 interface Ret { id: string; procedure: string; return_date: string; client_name: string; clients: { id: string; name: string; phone: string | null } | null; }
+interface BClient { id: string; name: string; phone: string | null; birth_date: string; days: number; age: number; }
 
 function Dashboard() {
   const { user } = useAuth();
@@ -32,12 +34,13 @@ function Dashboard() {
   const greeting = firstName ? `Olá, ${firstName} 👋` : "Olá 👋";
   const [appts, setAppts] = useState<Appt[]>([]);
   const [returns, setReturns] = useState<Ret[]>([]);
+  const [birthdays, setBirthdays] = useState<BClient[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       const today = todayISO();
-      const [a, r] = await Promise.all([
+      const [a, r, c] = await Promise.all([
         supabase.from("appointments").select("id,client_name,procedure,time,notes").eq("date", today).order("time"),
         supabase
           .from("appointments")
@@ -46,9 +49,20 @@ function Dashboard() {
           .lte("return_date", today)
           .order("return_date", { ascending: true })
           .limit(10),
+        supabase.from("clients").select("id,name,phone,birth_date").not("birth_date", "is", null),
       ]);
       setAppts((a.data as Appt[]) || []);
       setReturns((r.data as unknown as Ret[]) || []);
+      const rows = (c.data as { id: string; name: string; phone: string | null; birth_date: string }[]) || [];
+      const upc: BClient[] = rows
+        .map((cl) => {
+          const days = upcomingBirthdayDays(cl.birth_date);
+          if (days === null) return null;
+          return { ...cl, days, age: turningAge(cl.birth_date) };
+        })
+        .filter((x): x is BClient => x !== null)
+        .sort((a, b) => a.days - b.days);
+      setBirthdays(upc);
       setLoading(false);
     };
     load();
@@ -144,6 +158,40 @@ function Dashboard() {
                 ) : (
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 )}
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8">
+        <SectionTitle>Aniversários esta semana</SectionTitle>
+        {loading ? null : birthdays.length === 0 ? (
+          <EmptyState title="Nenhum aniversário esta semana" />
+        ) : (
+          <div className="space-y-2">
+            {birthdays.map((b) => (
+              <Card key={b.id} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                  <Cake className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{b.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {fmtBirthdayLabel(b.birth_date)} • faz {b.age} anos
+                    {b.days === 0 ? " • hoje" : b.days === 1 ? " • amanhã" : ` • em ${b.days} dias`}
+                  </p>
+                </div>
+                {b.phone ? (
+                  <a
+                    href={waLink(b.phone, `Olá ${b.name}, a equipe AESTIQ deseja um feliz aniversário! 🎂`)}
+                    target="_blank" rel="noreferrer"
+                    className="p-2 rounded-md bg-surface text-primary"
+                    aria-label="WhatsApp"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                  </a>
+                ) : null}
               </Card>
             ))}
           </div>
