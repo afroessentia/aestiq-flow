@@ -39,23 +39,25 @@ function Settings() {
   return (
     <div className="min-h-dvh bg-background">
       <header className="sticky top-0 z-20 bg-background border-b border-border">
-        <div className="mx-auto max-w-md flex items-center px-4 h-14 gap-2">
+        <div className="mx-auto max-w-md md:max-w-[900px] flex items-center px-4 md:px-8 h-14 gap-2">
           <Link to="/" className="p-2 -ml-2"><ChevronLeft className="w-5 h-5" /></Link>
           <h1 className="text-base font-semibold">Configurações</h1>
         </div>
       </header>
-      <main className="mx-auto max-w-md px-4 py-4 pb-12">
-        <Tabs defaultValue="clinica" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full h-auto">
-            <TabsTrigger value="clinica" className="text-xs">Clínica</TabsTrigger>
-            <TabsTrigger value="procedimentos" className="text-xs">Procedimentos</TabsTrigger>
-            <TabsTrigger value="horarios" className="text-xs">Horários</TabsTrigger>
-            <TabsTrigger value="perfil" className="text-xs">Perfil</TabsTrigger>
+      <main className="mx-auto max-w-md md:max-w-[900px] px-4 md:px-8 py-4 md:py-8 pb-12">
+        <Tabs defaultValue="clinica" className="w-full md:flex md:gap-8 md:items-start">
+          <TabsList className="grid grid-cols-4 w-full h-auto md:flex md:flex-col md:w-56 md:shrink-0 md:bg-transparent md:p-0 md:gap-1">
+            <TabsTrigger value="clinica" className="text-xs md:text-sm md:w-full md:justify-start md:py-2.5">Clínica</TabsTrigger>
+            <TabsTrigger value="procedimentos" className="text-xs md:text-sm md:w-full md:justify-start md:py-2.5">Procedimentos</TabsTrigger>
+            <TabsTrigger value="horarios" className="text-xs md:text-sm md:w-full md:justify-start md:py-2.5">Horários</TabsTrigger>
+            <TabsTrigger value="perfil" className="text-xs md:text-sm md:w-full md:justify-start md:py-2.5">Perfil</TabsTrigger>
           </TabsList>
-          <TabsContent value="clinica" className="mt-4"><ClinicaTab /></TabsContent>
-          <TabsContent value="procedimentos" className="mt-4"><ProceduresTab /></TabsContent>
-          <TabsContent value="horarios" className="mt-4"><HoursTab /></TabsContent>
-          <TabsContent value="perfil" className="mt-4"><PerfilTab /></TabsContent>
+          <div className="md:flex-1 md:min-w-0">
+            <TabsContent value="clinica" className="mt-4 md:mt-0"><ClinicaTab /></TabsContent>
+            <TabsContent value="procedimentos" className="mt-4 md:mt-0"><ProceduresTab /></TabsContent>
+            <TabsContent value="horarios" className="mt-4 md:mt-0"><HoursTab /></TabsContent>
+            <TabsContent value="perfil" className="mt-4 md:mt-0"><PerfilTab /></TabsContent>
+          </div>
         </Tabs>
       </main>
     </div>
