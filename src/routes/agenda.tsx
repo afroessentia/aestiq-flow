@@ -26,6 +26,8 @@ interface Appt {
   status: ApptStatus;
   pix_status: PixStatus;
   return_date: string | null;
+  total_amount: number | null;
+  deposit_amount: number | null;
   clients: { id: string; name: string; phone: string | null } | null;
 }
 
