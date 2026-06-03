@@ -19,6 +19,7 @@ export const Route = createFileRoute("/")({
 
 interface Appt { id: string; client_name: string; procedure: string; time: string; notes: string | null; }
 interface Ret { id: string; procedure: string; return_date: string; client_name: string; clients: { id: string; name: string; phone: string | null } | null; }
+interface BClient { id: string; name: string; phone: string | null; birth_date: string; days: number; age: number; }
 
 function Dashboard() {
   const { user } = useAuth();
