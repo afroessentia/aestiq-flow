@@ -21,7 +21,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLBut
     return (
       <button
         ref={ref}
-        className={`inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none ${v[variant]} ${s[size]} ${full ? "w-full" : ""} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none ${v[variant]} ${s[size]} ${full ? "w-full md:max-w-[320px]" : ""} ${className}`}
         {...p}
       />
     );
