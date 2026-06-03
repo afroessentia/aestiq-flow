@@ -60,6 +60,7 @@ function NewAppt() {
   const [totalAmount, setTotalAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [procedures, setProcedures] = useState<string[]>(DEFAULT_PROCEDURES);
+  const [procPrices, setProcPrices] = useState<Record<string, number>>({});
   const [pixKey, setPixKey] = useState(DEFAULT_PIX_KEY);
   const [pixType, setPixType] = useState<string>("");
 
