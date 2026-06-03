@@ -136,7 +136,7 @@ function RetornosPage() {
                     <a
                       href={waLink(r.client_phone, `Olá ${r.client_name}! Tudo bem? Passando para lembrar do seu retorno para ${r.procedure} na AESTIQ. Posso confirmar um horário?`)}
                       target="_blank" rel="noreferrer"
-                      className="flex-1 md:max-w-[320px] h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm inline-flex items-center justify-center gap-2"
+                      className="flex-1 md:flex-none md:max-w-[280px] md:w-[280px] h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm inline-flex items-center justify-center gap-2"
                     >
                       <MessageCircle className="w-4 h-4" /> WhatsApp
                     </a>

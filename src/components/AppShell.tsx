@@ -49,7 +49,7 @@ export function AppShell({ title, children, right }: { title: string; children: 
           <span className="inline-flex items-center justify-center h-10 rounded-md bg-primary text-primary-foreground font-bold text-base overflow-hidden px-2 min-w-[40px]">
             {logoUrl ? <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain" /> : "A"}
           </span>
-          <span className="text-[14px] text-muted-foreground truncate max-w-full">{clinicName || "AESTIQ"}</span>
+          <span className="text-[13px] truncate max-w-full" style={{ color: "rgba(255,255,255,0.7)" }}>{clinicName || "AESTIQ"}</span>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {desktopNav.map(({ to, label, icon: Icon }) => {
