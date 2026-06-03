@@ -60,6 +60,7 @@ function NewAppt() {
   const [totalAmount, setTotalAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [procedures, setProcedures] = useState<string[]>(DEFAULT_PROCEDURES);
+  const [procPrices, setProcPrices] = useState<Record<string, number>>({});
   const [pixKey, setPixKey] = useState(DEFAULT_PIX_KEY);
   const [pixType, setPixType] = useState<string>("");
 
@@ -69,8 +70,11 @@ function NewAppt() {
       setClients(data ?? []);
     });
     supabase.from("clinic_procedures" as never).select("name,default_price").eq("user_id", user.id).order("name").then(({ data }) => {
-      const list = ((data as unknown as { name: string }[]) ?? []).map((p) => p.name);
-      if (list.length > 0) setProcedures(list);
+      const rows = (data as unknown as { name: string; default_price: number | null }[]) ?? [];
+      if (rows.length > 0) setProcedures(rows.map((p) => p.name));
+      const prices: Record<string, number> = {};
+      rows.forEach((p) => { if (p.default_price != null) prices[p.name] = Number(p.default_price); });
+      setProcPrices(prices);
     });
     supabase.from("clinic_settings" as never).select("pix_key,pix_key_type").eq("user_id", user.id).maybeSingle().then(({ data }) => {
       const d = (data ?? {}) as { pix_key?: string | null; pix_key_type?: string | null };
@@ -176,7 +180,12 @@ function NewAppt() {
               <select
                 required
                 value={procedure}
-                onChange={(e) => setProc(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setProc(v);
+                  const price = procPrices[v];
+                  if (price != null && price > 0) setTotalAmount(String(price).replace(".", ","));
+                }}
                 className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm appearance-none pr-9 focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="" disabled>Selecione um procedimento</option>
