@@ -45,9 +45,11 @@ export function AppShell({ title, children, right }: { title: string; children: 
     <div className="min-h-dvh bg-background flex flex-col md:flex-row">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col md:fixed md:inset-y-0 md:left-0 md:w-60 md:border-r md:border-border md:bg-background md:z-30">
-        <div className="flex items-center gap-2 px-5 h-16 border-b border-border">
-          {logoNode}
-          <span className="font-semibold tracking-tight">AESTIQ</span>
+        <div className="flex flex-col items-start gap-1 px-5 py-3 border-b border-border">
+          <span className="inline-flex items-center justify-center h-10 rounded-md bg-primary text-primary-foreground font-bold text-base overflow-hidden px-2 min-w-[40px]">
+            {logoUrl ? <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain" /> : "A"}
+          </span>
+          <span className="text-[14px] text-muted-foreground truncate max-w-full">{clinicName || "AESTIQ"}</span>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {desktopNav.map(({ to, label, icon: Icon }) => {
