@@ -98,11 +98,7 @@ function NewAppt() {
   }, [clients, clientQuery]);
 
   const amount = Number(deposit.replace(",", ".")) || 0;
-  const pixPayload = useMemo(
-    () => buildPixPayload({ key: pixKey, merchant, city: CITY, amount: amount > 0 ? amount : undefined }),
-    [amount, pixKey, merchant],
-  );
-
+  const total = Number(totalAmount.replace(",", ".")) || 0;
 
   const pickClient = (c: ClientRow) => {
     setClientId(c.id);
@@ -116,18 +112,21 @@ function NewAppt() {
     if (!user) return;
     if (!client_name) return toast.error("Selecione um cliente");
     if (!procedure) return toast.error("Selecione um procedimento");
+    if (total <= 0) return toast.error("Informe o valor total");
     setBusy(true);
     const { error } = await supabase.from("appointments").insert({
       user_id: user.id,
       client_id: clientId || null,
       client_name, procedure, date, time, notes: notes || null,
       deposit_amount: amount > 0 ? amount : null,
-    });
+      total_amount: total,
+    } as never);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Agendamento criado!");
     navigate({ to: "/agenda" });
   };
+
 
   return (
     <div className="min-h-dvh bg-background">
