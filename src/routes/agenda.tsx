@@ -26,6 +26,8 @@ interface Appt {
   status: ApptStatus;
   pix_status: PixStatus;
   return_date: string | null;
+  total_amount: number | null;
+  deposit_amount: number | null;
   clients: { id: string; name: string; phone: string | null } | null;
 }
 
@@ -67,7 +69,7 @@ function AgendaPage() {
     const from = isoDate(days[0]);
     const to = isoDate(days[6]);
     supabase.from("appointments")
-      .select("id,client_id,client_name,procedure,date,time,status,pix_status,return_date,clients(id,name,phone)")
+      .select("id,client_id,client_name,procedure,date,time,status,pix_status,return_date,total_amount,deposit_amount,clients(id,name,phone)")
       .gte("date", from).lte("date", to).order("time")
       .then(({ data }) => setAppts((data as unknown as Appt[]) || []));
   };
@@ -202,6 +204,10 @@ function ApptDialog({ appt, onClose, onSaved }: { appt: Appt | null; onClose: ()
   if (!appt) return null;
 
   const phone = appt.clients?.phone ?? null;
+  const total = Number(appt.total_amount ?? 0);
+  const deposit = Number(appt.deposit_amount ?? 0);
+  const balance = Math.max(0, total - deposit);
+  const BRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const save = async () => {
     setBusy(true);
@@ -213,6 +219,36 @@ function ApptDialog({ appt, onClose, onSaved }: { appt: Appt | null; onClose: ()
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Agendamento atualizado");
+    onSaved();
+  };
+
+  const markBalancePaid = async () => {
+    setBusy(true);
+    const { error: e1 } = await supabase.from("appointments").update({ pix_status: "pago" }).eq("id", appt.id);
+    // upsert financial entry
+    const { data: ex } = await supabase.from("financial_entries").select("id").eq("appointment_id", appt.id).maybeSingle();
+    if (ex?.id) {
+      await supabase.from("financial_entries").update({
+        status: "pago_totalmente",
+        amount: total > 0 ? total : deposit,
+        updated_at: new Date().toISOString(),
+      }).eq("id", ex.id);
+    } else {
+      const { data: u } = await supabase.auth.getUser();
+      await supabase.from("financial_entries").insert({
+        user_id: u.user?.id,
+        appointment_id: appt.id,
+        client_name: appt.client_name,
+        procedure: appt.procedure,
+        entry_date: appt.date,
+        amount: total > 0 ? total : deposit,
+        status: "pago_totalmente",
+      } as never);
+    }
+    setBusy(false);
+    if (e1) return toast.error(e1.message);
+    setPixStatus("pago");
+    toast.success("Saldo marcado como pago");
     onSaved();
   };
 
@@ -228,6 +264,27 @@ function ApptDialog({ appt, onClose, onSaved }: { appt: Appt | null; onClose: ()
             <p className="text-sm"><span className="text-muted-foreground">Procedimento:</span> <span className="font-semibold text-dark">{appt.procedure}</span></p>
             <p className="text-sm"><span className="text-muted-foreground">Data:</span> <span className="font-semibold text-dark">{fmtDate(appt.date)} às {fmtTime(appt.time)}</span></p>
           </div>
+
+          <div className="rounded-lg border border-border p-3 grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Valor total</p>
+              <p className="text-sm font-semibold text-dark">{BRL(total)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Sinal pago</p>
+              <p className="text-sm font-semibold text-dark">{BRL(deposit)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Saldo restante</p>
+              <p className={`text-sm font-semibold ${balance > 0 ? "text-accent" : "text-primary"}`}>{BRL(balance)}</p>
+            </div>
+          </div>
+
+          {balance > 0 && pixStatus !== "pago" && (
+            <Button variant="secondary" full onClick={markBalancePaid} disabled={busy}>
+              Marcar saldo como pago
+            </Button>
+          )}
 
           <Field label="Status">
             <select value={status} onChange={(e) => setStatus(e.target.value as ApptStatus)}

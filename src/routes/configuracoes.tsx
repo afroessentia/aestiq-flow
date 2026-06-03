@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, Plus, Trash2, Upload, Save, Download } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Upload, Save, Download, FileText } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, Field, Input } from "@/components/u";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { resolveAssetUrl } from "@/lib/useLogo";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
 
 export const Route = createFileRoute("/configuracoes")({
   component: () => (<AuthGate><Settings /></AuthGate>),
@@ -263,6 +264,179 @@ function ExportData({ userId }: { userId: string | null }) {
     }
   };
 
+  const exportFinancialPDF = async () => {
+    if (!userId) return;
+    setBusyKey("pdf");
+    try {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth();
+      const start = `${y}-${String(m + 1).padStart(2, "0")}-01`;
+      const lastDay = new Date(y, m + 1, 0).getDate();
+      const end = `${y}-${String(m + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+      const monthLabel = now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+      const { data: clinic } = await supabase
+        .from("clinic_settings" as never).select("clinic_name,logo_url").eq("user_id", userId).maybeSingle();
+      const c = (clinic ?? {}) as { clinic_name?: string | null; logo_url?: string | null };
+      const clinicName = c.clinic_name || "Clínica";
+      const logoUrl = await resolveAssetUrl(c.logo_url ?? null);
+
+      const { data: appts } = await supabase
+        .from("appointments")
+        .select("id,client_name,procedure,date,status,pix_status,total_amount,deposit_amount")
+        .in("status", ["realizado", "noshow"])
+        .gte("date", start).lte("date", end);
+      const { data: entries } = await supabase
+        .from("financial_entries").select("*").gte("entry_date", start).lte("entry_date", end);
+
+      const byAppt: Record<string, { status: string; payment_method: string | null; amount: number }> = {};
+      (entries ?? []).forEach((e) => {
+        if (e.appointment_id) byAppt[e.appointment_id] = { status: e.status, payment_method: e.payment_method, amount: Number(e.amount) };
+      });
+
+      const STATUS: Record<string, string> = {
+        pendente: "Pendente", sinal_pago: "Sinal pago", pago_totalmente: "Pago totalmente",
+        noshow: "No-show", pago: "Pago totalmente",
+      };
+      const METHOD: Record<string, string> = { pix: "Pix", dinheiro: "Dinheiro", cartao: "Cartão", outro: "Outro" };
+
+      interface Tx { client: string; procedure: string; date: string; total: number; method: string; status: string; isNoShow: boolean; received: number; pending: number; }
+      const txs: Tx[] = [];
+      (appts ?? []).forEach((a) => {
+        const ex = byAppt[a.id];
+        const total = Number(a.total_amount ?? ex?.amount ?? 0);
+        const deposit = Number(a.deposit_amount ?? 0);
+        let status: string = ex?.status ?? "pendente";
+        if (a.status === "noshow") status = "noshow";
+        else if (!ex && a.pix_status === "pago") status = "sinal_pago";
+        const isNoShow = status === "noshow";
+        let received = 0; let pending = 0;
+        if (status === "pago_totalmente" || status === "pago") received = total;
+        else if (status === "sinal_pago") { received = deposit; pending = Math.max(0, total - deposit); }
+        else if (status === "pendente") pending = total;
+        txs.push({
+          client: a.client_name, procedure: a.procedure, date: a.date,
+          total, method: ex?.payment_method ? (METHOD[ex.payment_method] ?? ex.payment_method) : "—",
+          status: STATUS[status] ?? status, isNoShow, received, pending,
+        });
+      });
+      (entries ?? []).forEach((en) => {
+        if (en.appointment_id && (appts ?? []).some((a) => a.id === en.appointment_id)) return;
+        const total = Number(en.amount);
+        const status = en.status;
+        const isNoShow = status === "noshow";
+        let received = 0; let pending = 0;
+        if (status === "pago_totalmente" || status === "pago") received = total;
+        else if (status === "pendente") pending = total;
+        txs.push({
+          client: en.client_name, procedure: en.procedure, date: en.entry_date,
+          total, method: en.payment_method ? (METHOD[en.payment_method] ?? en.payment_method) : "—",
+          status: STATUS[status] ?? status, isNoShow, received, pending,
+        });
+      });
+
+      txs.sort((a, b) => (a.date < b.date ? -1 : 1));
+
+      const totalRecebido = txs.reduce((s, t) => s + t.received, 0);
+      const totalPendente = txs.reduce((s, t) => s + t.pending, 0);
+      const totalAtend = txs.length;
+      const noShowCount = txs.filter((t) => t.isNoShow).length;
+      const noShowRate = totalAtend > 0 ? (noShowCount / totalAtend) * 100 : 0;
+
+      const BRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const fmtD = (s: string) => { const [yy, mm, dd] = s.split("-"); return `${dd}/${mm}/${yy}`; };
+
+      const pdf = new jsPDF({ unit: "pt", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 40;
+      let y2 = margin;
+
+      if (logoUrl) {
+        try {
+          const res = await fetch(logoUrl);
+          const blob = await res.blob();
+          const dataUrl: string = await new Promise((resolve) => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(fr.result as string);
+            fr.readAsDataURL(blob);
+          });
+          pdf.addImage(dataUrl, "PNG", margin, y2, 50, 50);
+        } catch { /* ignore */ }
+      }
+      pdf.setFont("helvetica", "bold"); pdf.setFontSize(18);
+      pdf.text(clinicName, margin + 60, y2 + 22);
+      pdf.setFont("helvetica", "normal"); pdf.setFontSize(11);
+      pdf.text("Relatório financeiro", margin + 60, y2 + 40);
+      y2 += 70;
+
+      pdf.setFontSize(10); pdf.setTextColor(80);
+      pdf.text(`Período: ${monthLabel}`, margin, y2);
+      pdf.text(`Emitido em: ${now.toLocaleDateString("pt-BR")}`, pageW - margin, y2, { align: "right" });
+      y2 += 20;
+
+      pdf.setDrawColor(200); pdf.line(margin, y2, pageW - margin, y2);
+      y2 += 18;
+
+      pdf.setTextColor(20); pdf.setFont("helvetica", "bold"); pdf.setFontSize(12);
+      pdf.text("Resumo", margin, y2); y2 += 16;
+      pdf.setFont("helvetica", "normal"); pdf.setFontSize(11);
+      const lines = [
+        `Receita total recebida: ${BRL(totalRecebido)}`,
+        `Total pendente: ${BRL(totalPendente)}`,
+        `Número de atendimentos: ${totalAtend}`,
+        `Taxa de no-show: ${noShowRate.toFixed(1)}% (${noShowCount}/${totalAtend})`,
+      ];
+      lines.forEach((l) => { pdf.text(l, margin, y2); y2 += 16; });
+
+      y2 += 10;
+      pdf.setFont("helvetica", "bold"); pdf.setFontSize(12);
+      pdf.text("Transações", margin, y2); y2 += 14;
+
+      const cols = [
+        { h: "Cliente", w: 110 },
+        { h: "Procedimento", w: 110 },
+        { h: "Data", w: 60 },
+        { h: "Valor", w: 70 },
+        { h: "Pagamento", w: 70 },
+        { h: "Status", w: 95 },
+      ];
+      const drawHeader = () => {
+        pdf.setFillColor(240, 240, 240); pdf.rect(margin, y2, pageW - margin * 2, 18, "F");
+        pdf.setFont("helvetica", "bold"); pdf.setFontSize(9); pdf.setTextColor(20);
+        let x = margin + 4;
+        cols.forEach((c) => { pdf.text(c.h, x, y2 + 12); x += c.w; });
+        y2 += 18;
+      };
+      drawHeader();
+      pdf.setFont("helvetica", "normal"); pdf.setFontSize(9);
+
+      txs.forEach((t) => {
+        if (y2 > pageH - margin - 30) {
+          pdf.addPage(); y2 = margin; drawHeader();
+          pdf.setFont("helvetica", "normal"); pdf.setFontSize(9);
+        }
+        let x = margin + 4;
+        const cells = [t.client, t.procedure, fmtD(t.date), BRL(t.total), t.method, t.status];
+        cells.forEach((val, i) => {
+          const txt = pdf.splitTextToSize(String(val), cols[i].w - 6)[0] ?? "";
+          pdf.text(txt, x, y2 + 12);
+          x += cols[i].w;
+        });
+        pdf.setDrawColor(230); pdf.line(margin, y2 + 16, pageW - margin, y2 + 16);
+        y2 += 18;
+      });
+
+      pdf.save(`relatorio-financeiro-${y}-${String(m + 1).padStart(2, "0")}.pdf`);
+      toast.success("Relatório gerado");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erro ao gerar PDF");
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
   return (
     <Card className="space-y-3">
       <p className="text-sm font-semibold">Exportar dados</p>
@@ -271,6 +445,9 @@ function ExportData({ userId }: { userId: string | null }) {
       </Button>
       <Button variant="secondary" full onClick={exportFinancial} disabled={busyKey === "fin"}>
         <Download className="w-4 h-4" /> {busyKey === "fin" ? "Exportando..." : "Exportar financeiro (CSV)"}
+      </Button>
+      <Button variant="secondary" full onClick={exportFinancialPDF} disabled={busyKey === "pdf"}>
+        <FileText className="w-4 h-4" /> {busyKey === "pdf" ? "Gerando..." : "Exportar relatório financeiro (PDF)"}
       </Button>
     </Card>
   );
