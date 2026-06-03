@@ -57,26 +57,28 @@ function NewAppt() {
   const [time, setTime] = useState(search.time ?? "09:00");
   const [notes, setNotes] = useState("");
   const [deposit, setDeposit] = useState("");
+  const [totalAmount, setTotalAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [procedures, setProcedures] = useState<string[]>(DEFAULT_PROCEDURES);
   const [pixKey, setPixKey] = useState(DEFAULT_PIX_KEY);
-  const [merchant, setMerchant] = useState(DEFAULT_MERCHANT);
+  const [pixType, setPixType] = useState<string>("");
 
   useEffect(() => {
     if (!user) return;
     supabase.from("clients").select("id,name").order("name").then(({ data }) => {
       setClients(data ?? []);
     });
-    supabase.from("clinic_procedures" as never).select("name").eq("user_id", user.id).order("name").then(({ data }) => {
+    supabase.from("clinic_procedures" as never).select("name,default_price").eq("user_id", user.id).order("name").then(({ data }) => {
       const list = ((data as unknown as { name: string }[]) ?? []).map((p) => p.name);
       if (list.length > 0) setProcedures(list);
     });
-    supabase.from("clinic_settings" as never).select("pix_key,clinic_name").eq("user_id", user.id).maybeSingle().then(({ data }) => {
-      const d = (data ?? {}) as { pix_key?: string | null; clinic_name?: string | null };
+    supabase.from("clinic_settings" as never).select("pix_key,pix_key_type").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+      const d = (data ?? {}) as { pix_key?: string | null; pix_key_type?: string | null };
       if (d.pix_key) setPixKey(d.pix_key);
-      if (d.clinic_name) setMerchant(d.clinic_name.toUpperCase().slice(0, 25));
+      if (d.pix_key_type) setPixType(d.pix_key_type);
     });
   }, [user]);
+
 
 
   useEffect(() => {
