@@ -36,3 +36,23 @@ export function useLogoUrl() {
   }, [user?.id]);
   return url;
 }
+
+export function useClinicName() {
+  const { user } = useAuth();
+  const [name, setName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) { setName(null); return; }
+    let alive = true;
+    (async () => {
+      const { data } = await supabase
+        .from("clinic_settings" as never)
+        .select("clinic_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const n = (data as { clinic_name?: string | null } | null)?.clinic_name ?? null;
+      if (alive) setName(n);
+    })();
+    return () => { alive = false; };
+  }, [user?.id]);
+  return name;
+}

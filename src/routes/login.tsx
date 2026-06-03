@@ -60,7 +60,9 @@ function LoginPage() {
         style={{ backgroundColor: "#1A2E35" }}
       >
         <div className="max-w-sm w-full">
-          <img src={logoAestiq} alt="AESTIQ" className="w-28 h-28 mb-6 object-contain" />
+          <div className="w-20 h-20 rounded-full mb-6 flex items-center justify-center overflow-hidden" style={{ backgroundColor: "#2A9D8F" }}>
+            <img src={logoAestiq} alt="AESTIQ" className="w-14 h-14 object-contain" />
+          </div>
           <h2 className="text-3xl font-bold tracking-tight">AESTIQ</h2>
           <p className="text-sm text-white/70 mt-2 mb-10">
             Gestão para clínicas de estética avançada
