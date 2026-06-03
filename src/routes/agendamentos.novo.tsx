@@ -1,13 +1,13 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Copy, ChevronDown, Search as SearchIcon } from "lucide-react";
+import { ChevronLeft, Copy, ChevronDown, Search as SearchIcon, AlertTriangle } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { Button, Card, Field, Input, Textarea } from "@/components/u";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { buildPixPayload, qrUrl } from "@/lib/pix";
 import { todayISO } from "@/lib/format";
+
 
 interface Search { date?: string; time?: string }
 
