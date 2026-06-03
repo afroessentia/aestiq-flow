@@ -34,12 +34,13 @@ function Dashboard() {
   const greeting = firstName ? `Olá, ${firstName} 👋` : "Olá 👋";
   const [appts, setAppts] = useState<Appt[]>([]);
   const [returns, setReturns] = useState<Ret[]>([]);
+  const [birthdays, setBirthdays] = useState<BClient[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       const today = todayISO();
-      const [a, r] = await Promise.all([
+      const [a, r, c] = await Promise.all([
         supabase.from("appointments").select("id,client_name,procedure,time,notes").eq("date", today).order("time"),
         supabase
           .from("appointments")
@@ -48,9 +49,20 @@ function Dashboard() {
           .lte("return_date", today)
           .order("return_date", { ascending: true })
           .limit(10),
+        supabase.from("clients").select("id,name,phone,birth_date").not("birth_date", "is", null),
       ]);
       setAppts((a.data as Appt[]) || []);
       setReturns((r.data as unknown as Ret[]) || []);
+      const rows = (c.data as { id: string; name: string; phone: string | null; birth_date: string }[]) || [];
+      const upc: BClient[] = rows
+        .map((cl) => {
+          const days = upcomingBirthdayDays(cl.birth_date);
+          if (days === null) return null;
+          return { ...cl, days, age: turningAge(cl.birth_date) };
+        })
+        .filter((x): x is BClient => x !== null)
+        .sort((a, b) => a.days - b.days);
+      setBirthdays(upc);
       setLoading(false);
     };
     load();
