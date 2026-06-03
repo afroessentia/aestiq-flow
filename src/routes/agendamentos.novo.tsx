@@ -185,30 +185,58 @@ function NewAppt() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 pointer-events-none" />
             </div>
           </Field>
+          <Field label="Valor total (R$)" hint="Valor cheio do atendimento.">
+            <Input required inputMode="decimal" placeholder="0,00" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} />
+          </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Data"><Input type="date" required value={date} onChange={(e) => setDate(e.target.value)} /></Field>
             <Field label="Horário"><Input type="time" required value={time} onChange={(e) => setTime(e.target.value)} /></Field>
           </div>
           <Field label="Observações"><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Detalhes do atendimento" /></Field>
 
-          <Field label="Valor do sinal (Pix) — opcional" hint="Informe o valor para gerar o QR Code com valor.">
+          <Field label="Valor do sinal (Pix) — opcional" hint="Informe o valor combinado como sinal.">
             <Input inputMode="decimal" placeholder="0,00" value={deposit} onChange={(e) => setDeposit(e.target.value)} />
           </Field>
 
-          <Card className="bg-surface border-surface">
-            <p className="text-xs font-semibold uppercase tracking-wider text-dark/70 mb-3">Pix para sinal</p>
-            <div className="flex items-center justify-center bg-card rounded-lg p-3 mb-3">
-              <img src={qrUrl(pixPayload)} alt="QR Code Pix" className="w-56 h-56" />
-            </div>
-            <p className="text-xs text-muted-foreground mb-2">Chave: <span className="text-foreground font-medium">{pixKey}</span></p>
-            <textarea readOnly value={pixPayload} className="w-full text-[10px] font-mono p-2 rounded border border-border bg-card h-16 resize-none" />
-            <Button
-              type="button" variant="secondary" full size="md" className="mt-2"
-              onClick={() => { navigator.clipboard.writeText(pixPayload); toast.success("Copiado!"); }}
-            >
-              <Copy className="w-4 h-4" /> Copiar código Pix
-            </Button>
+          <Card className="bg-surface border-surface space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-dark/70">Sinal de confirmação</p>
+            {pixKey ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Valor do sinal</p>
+                    <p className="font-semibold text-foreground">
+                      {amount > 0 ? amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tipo de chave</p>
+                    <p className="font-semibold text-foreground">{PIX_TYPE_LABEL[pixType] ?? "—"}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Chave Pix</p>
+                  <p className="font-medium text-foreground break-all">{pixKey}</p>
+                </div>
+                <Button
+                  type="button" variant="secondary" full size="md"
+                  onClick={() => { navigator.clipboard.writeText(pixKey); toast.success("Chave Pix copiada!"); }}
+                >
+                  <Copy className="w-4 h-4" /> Copiar chave Pix
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-start gap-2 text-sm text-dark">
+                <AlertTriangle className="w-4 h-4 mt-0.5 text-accent shrink-0" />
+                <p>
+                  Configure sua chave Pix em{" "}
+                  <Link to="/configuracoes" className="font-semibold text-primary underline">Configurações</Link>{" "}
+                  para usar esta função.
+                </p>
+              </div>
+            )}
           </Card>
+
 
           <Button type="submit" full disabled={busy}>{busy ? "Salvando..." : "Salvar agendamento"}</Button>
         </form>
