@@ -2,7 +2,7 @@ import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { Calendar, Home, Users, Bell, LogOut, Settings, Wallet, Cake } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
-import { useLogoUrl } from "@/lib/useLogo";
+import { useLogoUrl, useClinicName } from "@/lib/useLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { upcomingBirthdayDays } from "@/lib/birthday";
 
