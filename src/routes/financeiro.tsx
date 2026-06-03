@@ -80,7 +80,7 @@ function FinanceiroPage() {
     const [a, e] = await Promise.all([
       supabase
         .from("appointments")
-        .select("id,client_name,procedure,date,deposit_amount")
+        .select("id,client_name,procedure,date,deposit_amount,total_amount")
         .eq("status", "realizado")
         .gte("date", start)
         .lte("date", end),
@@ -104,11 +104,12 @@ function FinanceiroPage() {
         client_name: ex?.client_name ?? ap.client_name,
         procedure: ex?.procedure ?? ap.procedure,
         date: ex?.entry_date ?? ap.date,
-        amount: ex ? Number(ex.amount) : Number(ap.deposit_amount ?? 0),
+        amount: ex ? Number(ex.amount) : Number(ap.total_amount ?? ap.deposit_amount ?? 0),
         status: (ex?.status as Status) ?? "pendente",
         payment_method: (ex?.payment_method as Method) ?? "",
       };
     });
+
 
     // Include stand-alone entries (no appointment match in this month) too
     const apptIds = new Set(appts.map((x) => x.id));
