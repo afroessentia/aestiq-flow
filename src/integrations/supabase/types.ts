@@ -87,6 +87,7 @@ export type Database = {
           return_date: string | null
           status: string
           time: string
+          total_amount: number | null
           user_id: string
         }
         Insert: {
@@ -102,6 +103,7 @@ export type Database = {
           return_date?: string | null
           status?: string
           time: string
+          total_amount?: number | null
           user_id: string
         }
         Update: {
@@ -117,6 +119,7 @@ export type Database = {
           return_date?: string | null
           status?: string
           time?: string
+          total_amount?: number | null
           user_id?: string
         }
         Relationships: [
