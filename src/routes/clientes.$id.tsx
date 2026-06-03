@@ -687,3 +687,79 @@ function RegionSilhouette({ region }: { region: Region }) {
       );
   }
 }
+
+async function fetchImageDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const r = new FileReader();
+      r.onloadend = () => resolve(typeof r.result === "string" ? r.result : null);
+      r.onerror = () => resolve(null);
+      r.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+async function generateConsentPDF(client: Client, lastProc: Proc | null, userId: string | null) {
+  try {
+    let clinicName = "Clínica";
+    let logoUrl: string | null = null;
+    if (userId) {
+      const { data } = await supabase.from("clinic_settings" as never)
+        .select("clinic_name,logo_url").eq("user_id", userId).maybeSingle();
+      const d = (data ?? {}) as { clinic_name?: string | null; logo_url?: string | null };
+      if (d.clinic_name) clinicName = d.clinic_name;
+      if (d.logo_url) logoUrl = await resolveAssetUrl(d.logo_url);
+    }
+    const procedureName = lastProc?.procedure ?? "—";
+    const dataUrl = logoUrl ? await fetchImageDataUrl(logoUrl) : null;
+
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const W = doc.internal.pageSize.getWidth();
+    let y = 56;
+
+    if (dataUrl) {
+      try { doc.addImage(dataUrl, "PNG", 48, y - 8, 56, 56); } catch { /* ignore */ }
+    }
+    doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+    doc.text(clinicName, dataUrl ? 116 : 48, y + 10);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.text("Termo de Consentimento Livre e Esclarecido", dataUrl ? 116 : 48, y + 28);
+    y += 80;
+
+    doc.setFontSize(11);
+    doc.text(`Paciente: ${client.name}`, 48, y); y += 18;
+    doc.text(`Procedimento: ${procedureName}`, 48, y); y += 18;
+    doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, 48, y); y += 28;
+
+    doc.setFont("helvetica", "bold"); doc.text("Declaração", 48, y); y += 16;
+    doc.setFont("helvetica", "normal");
+    const body =
+      `Eu, ${client.name}, declaro que fui devidamente informado(a) sobre o procedimento "${procedureName}", ` +
+      `incluindo seus objetivos, benefícios esperados, possíveis riscos, efeitos colaterais, contraindicações ` +
+      `e cuidados pré e pós-procedimento. Tive a oportunidade de esclarecer todas as minhas dúvidas com o(a) ` +
+      `profissional responsável e compreendi que nenhum resultado pode ser garantido em sua totalidade, ` +
+      `por se tratar de procedimento estético que depende de fatores individuais de resposta do organismo.\n\n` +
+      `Autorizo, de forma livre e esclarecida, a realização do procedimento acima descrito, bem como o uso ` +
+      `dos meus dados pessoais e de saúde para fins de prontuário, conforme a Lei Geral de Proteção de Dados ` +
+      `(LGPD - Lei nº 13.709/2018). Comprometo-me a seguir todas as orientações de cuidados informadas pela ` +
+      `equipe.`;
+    const lines = doc.splitTextToSize(body, W - 96);
+    doc.text(lines, 48, y); y += lines.length * 14 + 40;
+
+    doc.line(72, y, W - 72, y); y += 14;
+    doc.setFontSize(10);
+    doc.text("Assinatura do(a) paciente", W / 2, y, { align: "center" }); y += 40;
+    doc.line(72, y, W - 72, y); y += 14;
+    doc.text("Assinatura do(a) profissional responsável", W / 2, y, { align: "center" });
+
+    doc.save(`termo-consentimento-${client.name.replace(/\s+/g, "_")}.pdf`);
+    toast.success("Termo gerado");
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : "Erro ao gerar PDF");
+  }
+}
+
