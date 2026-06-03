@@ -161,7 +161,7 @@ function AgendaPage() {
                 <Link
                   to="/agendamentos/novo"
                   search={{ date: selectedISO, time: h } as never}
-                  className="flex-1 h-14 border border-dashed border-border rounded-lg flex items-center justify-center text-xs text-muted-foreground active:bg-surface"
+                  className="flex-1 h-14 md:h-12 border border-dashed border-border rounded-lg flex items-center justify-center text-xs text-muted-foreground active:bg-surface"
                 >
                   Disponível
                 </Link>
