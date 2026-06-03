@@ -115,7 +115,7 @@ function Dashboard() {
       ) : appts.length === 0 ? (
         <EmptyState title="Nenhum atendimento hoje" hint="Aproveite para organizar a semana." />
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {appts.map((a) => (
             <Card key={a.id} className="flex items-center gap-3">
               <div className="text-center bg-surface rounded-lg px-3 py-2 min-w-[64px]">
