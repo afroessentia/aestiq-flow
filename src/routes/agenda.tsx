@@ -69,7 +69,7 @@ function AgendaPage() {
     const from = isoDate(days[0]);
     const to = isoDate(days[6]);
     supabase.from("appointments")
-      .select("id,client_id,client_name,procedure,date,time,status,pix_status,return_date,clients(id,name,phone)")
+      .select("id,client_id,client_name,procedure,date,time,status,pix_status,return_date,total_amount,deposit_amount,clients(id,name,phone)")
       .gte("date", from).lte("date", to).order("time")
       .then(({ data }) => setAppts((data as unknown as Appt[]) || []));
   };
