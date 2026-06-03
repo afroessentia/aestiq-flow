@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button, Input, Field } from "@/components/u";
 import { toast } from "sonner";
+import { FileText, CalendarCheck, Wallet } from "lucide-react";
 import logoAestiq from "@/assets/logo-aestiq.svg";
 
 export const Route = createFileRoute("/login")({
@@ -52,89 +53,121 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col" style={{ backgroundColor: "#FAFAF9" }}>
-      <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full">
-        <div className="mb-10 text-center">
-          <img
-            src={logoAestiq}
-            alt="AESTIQ"
-            className="w-24 h-24 mx-auto mb-4 object-contain"
-          />
-          <h1 className="text-3xl font-bold tracking-tight text-dark">AESTIQ</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+    <div className="min-h-dvh flex flex-col md:flex-row" style={{ backgroundColor: "#FAFAF9" }}>
+      {/* Left column — desktop only */}
+      <aside
+        className="hidden md:flex md:w-1/2 md:flex-col md:items-center md:justify-center md:px-12 md:py-16 md:text-white"
+        style={{ backgroundColor: "#1A2E35" }}
+      >
+        <div className="max-w-sm w-full">
+          <img src={logoAestiq} alt="AESTIQ" className="w-28 h-28 mb-6 object-contain" />
+          <h2 className="text-3xl font-bold tracking-tight">AESTIQ</h2>
+          <p className="text-sm text-white/70 mt-2 mb-10">
             Gestão para clínicas de estética avançada
           </p>
+          <ul className="space-y-4">
+            <li className="flex items-center gap-3 text-sm">
+              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center" style={{ backgroundColor: "#2A9D8F" }}>
+                <FileText className="w-4 h-4" />
+              </span>
+              Prontuário visual completo
+            </li>
+            <li className="flex items-center gap-3 text-sm">
+              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center" style={{ backgroundColor: "#2A9D8F" }}>
+                <CalendarCheck className="w-4 h-4" />
+              </span>
+              Agenda e retornos automáticos
+            </li>
+            <li className="flex items-center gap-3 text-sm">
+              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center" style={{ backgroundColor: "#2A9D8F" }}>
+                <Wallet className="w-4 h-4" />
+              </span>
+              Financeiro simplificado
+            </li>
+          </ul>
         </div>
+      </aside>
 
-        <form onSubmit={submit} className="space-y-4">
-          {mode === "signup" && (
-            <Field label="Nome completo">
-              <Input
-                type="text"
-                required
-                autoComplete="name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Seu nome completo"
-              />
-            </Field>
-          )}
-          <Field label="E-mail">
-            <Input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-            />
-          </Field>
-          <Field label="Senha">
-            <Input
-              type="password"
-              required
-              minLength={6}
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
-          </Field>
-
-          <div className="flex justify-end -mt-2">
-            <button
-              type="button"
-              onClick={async () => {
-                if (!email) {
-                  toast.error("Informe seu e-mail para redefinir a senha");
-                  return;
-                }
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                  redirectTo: window.location.origin,
-                });
-                if (error) toast.error(error.message);
-                else toast.success("E-mail de redefinição enviado");
-              }}
-              className="text-xs font-medium hover:underline"
-              style={{ color: "#2A9D8F" }}
-            >
-              Esqueceu sua senha?
-            </button>
+      {/* Right column — form */}
+      <div className="flex-1 flex flex-col justify-center px-6 md:px-12 py-10 md:bg-white">
+        <div className="w-full max-w-md md:max-w-[420px] mx-auto">
+          <div className="mb-10 text-center md:hidden">
+            <img src={logoAestiq} alt="AESTIQ" className="w-24 h-24 mx-auto mb-4 object-contain" />
+            <h1 className="text-3xl font-bold tracking-tight text-dark">AESTIQ</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Gestão para clínicas de estética avançada
+            </p>
           </div>
 
+          <form onSubmit={submit} className="space-y-4">
+            {mode === "signup" && (
+              <Field label="Nome completo">
+                <Input
+                  type="text"
+                  required
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Seu nome completo"
+                />
+              </Field>
+            )}
+            <Field label="E-mail">
+              <Input
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com"
+              />
+            </Field>
+            <Field label="Senha">
+              <Input
+                type="password"
+                required
+                minLength={6}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </Field>
 
-          <Button type="submit" full disabled={busy}>
-            {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
-          </Button>
+            <div className="flex justify-end -mt-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!email) {
+                    toast.error("Informe seu e-mail para redefinir a senha");
+                    return;
+                  }
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin,
+                  });
+                  if (error) toast.error(error.message);
+                  else toast.success("E-mail de redefinição enviado");
+                }}
+                className="text-xs font-medium hover:underline"
+                style={{ color: "#2A9D8F" }}
+              >
+                Esqueceu sua senha?
+              </button>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="block w-full text-sm text-muted-foreground py-2"
-          >
-            {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
-          </button>
-        </form>
+            <Button type="submit" full disabled={busy}>
+              {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+              className="block w-full text-sm text-muted-foreground py-2"
+            >
+              {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
