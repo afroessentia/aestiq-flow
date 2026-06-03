@@ -69,22 +69,22 @@ function LoginPage() {
           </p>
           <ul className="space-y-4">
             <li className="flex items-center gap-3 text-sm">
-              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center" style={{ backgroundColor: "#2A9D8F" }}>
+              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center shrink-0" style={{ backgroundColor: "#2A9D8F" }}>
                 <FileText className="w-4 h-4" />
               </span>
-              Prontuário visual completo
+              Prontuário visual com fotos e mapeamento
             </li>
             <li className="flex items-center gap-3 text-sm">
-              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center" style={{ backgroundColor: "#2A9D8F" }}>
+              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center shrink-0" style={{ backgroundColor: "#2A9D8F" }}>
                 <CalendarCheck className="w-4 h-4" />
               </span>
-              Agenda e retornos automáticos
+              Seus dados são seus, exporte quando quiser
             </li>
             <li className="flex items-center gap-3 text-sm">
-              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center" style={{ backgroundColor: "#2A9D8F" }}>
+              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center shrink-0" style={{ backgroundColor: "#2A9D8F" }}>
                 <Wallet className="w-4 h-4" />
               </span>
-              Financeiro simplificado
+              Financeiro por procedimento, sem planilha
             </li>
           </ul>
         </div>
