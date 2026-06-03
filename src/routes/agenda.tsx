@@ -265,6 +265,27 @@ function ApptDialog({ appt, onClose, onSaved }: { appt: Appt | null; onClose: ()
             <p className="text-sm"><span className="text-muted-foreground">Data:</span> <span className="font-semibold text-dark">{fmtDate(appt.date)} às {fmtTime(appt.time)}</span></p>
           </div>
 
+          <div className="rounded-lg border border-border p-3 grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Valor total</p>
+              <p className="text-sm font-semibold text-dark">{BRL(total)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Sinal pago</p>
+              <p className="text-sm font-semibold text-dark">{BRL(deposit)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-muted-foreground">Saldo restante</p>
+              <p className={`text-sm font-semibold ${balance > 0 ? "text-accent" : "text-primary"}`}>{BRL(balance)}</p>
+            </div>
+          </div>
+
+          {balance > 0 && pixStatus !== "pago" && (
+            <Button variant="secondary" full onClick={markBalancePaid} disabled={busy}>
+              Marcar saldo como pago
+            </Button>
+          )}
+
           <Field label="Status">
             <select value={status} onChange={(e) => setStatus(e.target.value as ApptStatus)}
               className="w-full h-11 rounded-md border border-input bg-background px-3 text-sm">
