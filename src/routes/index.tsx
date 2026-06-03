@@ -41,7 +41,7 @@ function Dashboard() {
     const load = async () => {
       const today = todayISO();
       const [a, r, c] = await Promise.all([
-        supabase.from("appointments").select("id,client_name,procedure,time,notes").eq("date", today).order("time"),
+        supabase.from("appointments").select("id,client_name,procedure,time,notes,status").eq("date", today).in("status", ["agendado", "confirmado"]).order("time"),
         supabase
           .from("appointments")
           .select("id,procedure,return_date,client_name,clients(id,name,phone)")
