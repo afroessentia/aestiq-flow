@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, ChevronLeft, ChevronRight, MessageCircle, Save } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { AppShell } from "@/components/AppShell";
-import { Button, Card, EmptyState, Field } from "@/components/u";
+import { Button, EmptyState, Field } from "@/components/u";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDate, fmtTime, waLink } from "@/lib/format";
@@ -127,10 +127,15 @@ function AgendaPage() {
             <button
               key={i}
               onClick={() => setSelected(d)}
-              className={`flex flex-col items-center justify-center py-2 rounded-lg ${active ? "bg-primary text-primary-foreground" : "bg-surface text-dark"}`}
+              className="flex flex-col items-center justify-center py-2 rounded-lg border"
+              style={
+                active
+                  ? { backgroundColor: "#0F2C26", color: "#C39A54", borderColor: "#0F2C26" }
+                  : { backgroundColor: "#FFFFFF", color: "#1A1A1A", borderColor: "#E8E3DB" }
+              }
             >
               <span className="text-[10px] font-medium uppercase opacity-80">{DAY_NAMES[i]}</span>
-              <span className={`text-base font-bold ${today && !active ? "text-primary" : ""}`}>{d.getDate()}</span>
+              <span className="text-base font-bold" style={today && !active ? { color: "#C39A54" } : undefined}>{d.getDate()}</span>
             </button>
           );
         })}
@@ -150,18 +155,18 @@ function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => setOpenId(a.id)}
-                  className="flex-1 text-left"
+                  className="flex-1 text-left rounded-lg p-3 transition-colors"
+                  style={{ backgroundColor: "#EBF2F0", borderLeft: "3px solid #0F2C26" }}
                 >
-                  <Card className="bg-surface border-surface active:bg-surface/80">
-                    <p className="font-semibold text-dark">{a.client_name}</p>
-                    <p className="text-xs text-muted-foreground">{a.procedure}</p>
-                  </Card>
+                  <p className="font-semibold" style={{ color: "#0F2C26" }}>{a.client_name}</p>
+                  <p className="text-xs text-muted-foreground">{a.procedure}</p>
                 </button>
               ) : (
                 <Link
                   to="/agendamentos/novo"
                   search={{ date: selectedISO, time: h } as never}
-                  className="flex-1 h-14 md:h-12 border border-dashed border-border rounded-lg flex items-center justify-center text-xs text-muted-foreground active:bg-surface"
+                  className="flex-1 h-14 md:h-12 border border-dashed rounded-lg flex items-center justify-center text-xs text-muted-foreground"
+                  style={{ borderColor: "#E8E3DB" }}
                 >
                   Disponível
                 </Link>
