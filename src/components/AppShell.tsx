@@ -54,12 +54,7 @@ export function AppShell({ title, children, right }: { title: string; children: 
           {logoUrl ? (
             <img src={logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
           ) : (
-            <img
-              src={new URL("../assets/logo-aestiq.svg", import.meta.url).href}
-              alt="AESTIQ"
-              className="h-14 w-auto object-contain"
-              style={{ color: "#C39A54", filter: "none" }}
-            />
+            <img src={logoAestiq} alt="AESTIQ" className="h-14 w-auto object-contain" style={{ color: "#C39A54" }} />
           )}
           {clinicName && (
             <span className="text-[12px] truncate max-w-full text-center" style={{ color: "rgba(250,248,245,0.55)" }}>
