@@ -127,10 +127,15 @@ function AgendaPage() {
             <button
               key={i}
               onClick={() => setSelected(d)}
-              className={`flex flex-col items-center justify-center py-2 rounded-lg ${active ? "bg-primary text-primary-foreground" : "bg-surface text-dark"}`}
+              className="flex flex-col items-center justify-center py-2 rounded-lg border"
+              style={
+                active
+                  ? { backgroundColor: "#0F2C26", color: "#C39A54", borderColor: "#0F2C26" }
+                  : { backgroundColor: "#FFFFFF", color: "#1A1A1A", borderColor: "#E8E3DB" }
+              }
             >
               <span className="text-[10px] font-medium uppercase opacity-80">{DAY_NAMES[i]}</span>
-              <span className={`text-base font-bold ${today && !active ? "text-primary" : ""}`}>{d.getDate()}</span>
+              <span className="text-base font-bold" style={today && !active ? { color: "#C39A54" } : undefined}>{d.getDate()}</span>
             </button>
           );
         })}
