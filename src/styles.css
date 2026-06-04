@@ -34,29 +34,30 @@
 }
 
 :root {
-  --radius: 0.75rem;
-  /* AESTIQ tokens */
-  --background: oklch(0.985 0.003 95);            /* #FAFAF9 warm white */
-  --foreground: oklch(0.22 0.005 270);            /* #1C1C1E text */
-  --card: oklch(1 0 0);
-  --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0);
-  --popover-foreground: var(--foreground);
-  --primary: oklch(0.66 0.09 180);                /* #2A9D8F teal */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.97 0.02 180);              /* #F0F9F8 mint */
-  --secondary-foreground: oklch(0.32 0.04 200);   /* #1A2E35 */
-  --muted: oklch(0.97 0.005 180);
-  --muted-foreground: oklch(0.55 0.02 260);       /* #6B7280 */
-  --accent: oklch(0.77 0.10 40);                  /* #E8937A salmon */
-  --accent-foreground: oklch(1 0 0);
+  --radius: 0.625rem;
+  /* AESTIQ — premium editorial tokens */
+  --background: #FAF8F5;                          /* warm ivory */
+  --foreground: #1A1A1A;                          /* dark charcoal */
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --primary: #C39A54;                             /* warm gold */
+  --primary-foreground: #FFFFFF;
+  --secondary: #F3EFE8;                           /* soft ivory */
+  --secondary-foreground: #0F2C26;                /* petroleum */
+  --muted: #F3EFE8;
+  --muted-foreground: #6B6862;
+  --accent: #EBF2F0;                              /* desaturated pale green */
+  --accent-foreground: #0F2C26;
   --destructive: oklch(0.6 0.22 27);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0.005 180);
-  --input: oklch(0.94 0.005 180);
-  --ring: oklch(0.66 0.09 180);
-  --surface: oklch(0.97 0.02 180);                /* #F0F9F8 */
-  --dark: oklch(0.32 0.04 200);                   /* #1A2E35 */
+  --destructive-foreground: #FFFFFF;
+  --border: #E8E3DB;                              /* warm beige */
+  --input: #E8E3DB;
+  --ring: #C39A54;
+  --surface: #F3EFE8;
+  --dark: #0F2C26;                                /* deep petroleum green */
+  --font-serif: "Cormorant Garamond", "Cormorant", Georgia, serif;
 }
 
 .dark { /* not used, app is light only */ }
