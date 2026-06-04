@@ -155,18 +155,18 @@ function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => setOpenId(a.id)}
-                  className="flex-1 text-left"
+                  className="flex-1 text-left rounded-lg p-3 transition-colors"
+                  style={{ backgroundColor: "#EBF2F0", borderLeft: "3px solid #0F2C26" }}
                 >
-                  <Card className="bg-surface border-surface active:bg-surface/80">
-                    <p className="font-semibold text-dark">{a.client_name}</p>
-                    <p className="text-xs text-muted-foreground">{a.procedure}</p>
-                  </Card>
+                  <p className="font-semibold" style={{ color: "#0F2C26" }}>{a.client_name}</p>
+                  <p className="text-xs text-muted-foreground">{a.procedure}</p>
                 </button>
               ) : (
                 <Link
                   to="/agendamentos/novo"
                   search={{ date: selectedISO, time: h } as never}
-                  className="flex-1 h-14 md:h-12 border border-dashed border-border rounded-lg flex items-center justify-center text-xs text-muted-foreground active:bg-surface"
+                  className="flex-1 h-14 md:h-12 border border-dashed rounded-lg flex items-center justify-center text-xs text-muted-foreground"
+                  style={{ borderColor: "#E8E3DB" }}
                 >
                   Disponível
                 </Link>
