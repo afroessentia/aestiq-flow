@@ -367,7 +367,7 @@ function ClientePage() {
                 {regionMarkers.map(m => (
                   <g key={m.number} onClick={(e) => { e.stopPropagation(); setSelectedMarker(m.number); }}>
                     <circle cx={(m.x / 100) * 300} cy={(m.y / 100) * 400} r={selectedMarker === m.number ? 14 : 12}
-                            fill="#2A9D8F" stroke="#FAFAF9" strokeWidth="2" />
+                            fill="#C39A54" stroke="#FAFAF9" strokeWidth="2" />
                     <text x={(m.x / 100) * 300} y={(m.y / 100) * 400 + 4}
                           textAnchor="middle" fontSize="11" fontWeight="700" fill="#FAFAF9">
                       {m.number}
@@ -607,7 +607,7 @@ function PhotoInput({ label, file, onChange }: { label: string; file: File | nul
 }
 
 function RegionSilhouette({ region }: { region: Region }) {
-  const stroke = "#1A2E35";
+  const stroke = "#0F2C26";
   const fill = "#FAFAF9";
   switch (region) {
     case "rosto":
