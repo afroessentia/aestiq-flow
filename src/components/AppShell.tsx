@@ -36,20 +36,34 @@ export function AppShell({ title, children, right }: { title: string; children: 
   }, [user, path]);
 
   const logoNode = (
-    <span className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-primary text-primary-foreground font-bold text-sm overflow-hidden">
-      {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" /> : "A"}
+    <span className="inline-flex items-center justify-center w-8 h-8 rounded-md overflow-hidden" style={{ color: "#C39A54" }}>
+      {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" /> : <img src="/src/assets/logo-monogram.svg" alt="" className="w-full h-full object-contain" />}
     </span>
   );
 
   return (
     <div className="min-h-dvh bg-background flex flex-col md:flex-row">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:flex-col md:fixed md:inset-y-0 md:left-0 md:w-60 md:border-r md:border-border md:bg-background md:z-30">
-        <div className="flex flex-col items-start gap-1 px-5 py-3 border-b border-border">
-          <span className="inline-flex items-center justify-center h-10 rounded-md bg-primary text-primary-foreground font-bold text-base overflow-hidden px-2 min-w-[40px]">
-            {logoUrl ? <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain" /> : "A"}
-          </span>
-          <span className="text-[13px] truncate max-w-full" style={{ color: "rgba(255,255,255,0.7)" }}>{clinicName || "AESTIQ"}</span>
+      <aside
+        className="hidden md:flex md:flex-col md:fixed md:inset-y-0 md:left-0 md:w-60 md:z-30"
+        style={{ backgroundColor: "#0F2C26", color: "rgba(250,248,245,0.7)" }}
+      >
+        <div className="flex flex-col items-center gap-2 px-5 py-6 border-b" style={{ borderColor: "rgba(195,154,84,0.18)" }}>
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
+          ) : (
+            <img
+              src={new URL("../assets/logo-aestiq.svg", import.meta.url).href}
+              alt="AESTIQ"
+              className="h-14 w-auto object-contain"
+              style={{ color: "#C39A54", filter: "none" }}
+            />
+          )}
+          {clinicName && (
+            <span className="text-[12px] truncate max-w-full text-center" style={{ color: "rgba(250,248,245,0.55)" }}>
+              {clinicName}
+            </span>
+          )}
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {desktopNav.map(({ to, label, icon: Icon }) => {
@@ -59,14 +73,17 @@ export function AppShell({ title, children, right }: { title: string; children: 
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  active ? "bg-secondary text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors"
+                style={
+                  active
+                    ? { color: "#C39A54", backgroundColor: "rgba(195,154,84,0.10)" }
+                    : { color: "rgba(250,248,245,0.7)" }
+                }
               >
                 <span className="relative">
                   <Icon className="w-5 h-5" />
                   {showCake && (
-                    <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center w-4 h-4 rounded-full bg-accent text-accent-foreground">
+                    <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center w-4 h-4 rounded-full" style={{ backgroundColor: "#C39A54", color: "#0F2C26" }}>
                       <Cake className="w-2.5 h-2.5" />
                     </span>
                   )}
@@ -78,7 +95,8 @@ export function AppShell({ title, children, right }: { title: string; children: 
         </nav>
         <button
           onClick={async () => { await signOut(); router.navigate({ to: "/login" }); }}
-          className="m-3 flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="m-3 flex items-center gap-3 px-3 py-2 rounded-md text-sm"
+          style={{ color: "rgba(250,248,245,0.7)" }}
         >
           <LogOut className="w-5 h-5" /> Sair
         </button>
