@@ -5,6 +5,8 @@ import { useAuth } from "@/lib/auth";
 import { useLogoUrl, useClinicName } from "@/lib/useLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { upcomingBirthdayDays } from "@/lib/birthday";
+import logoAestiq from "@/assets/logo-aestiq.svg";
+import logoMonogram from "@/assets/logo-monogram.svg";
 
 const nav = [
   { to: "/", label: "Hoje", icon: Home },
