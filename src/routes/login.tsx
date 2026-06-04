@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button, Input, Field } from "@/components/u";
 import { toast } from "sonner";
 import { FileText, CalendarCheck, Wallet } from "lucide-react";
-import logoAestiq from "@/assets/logo-aestiq.svg";
 import logoMonogram from "@/assets/logo-monogram.svg";
+import aestiqLogoAsset from "@/assets/aestiq-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
