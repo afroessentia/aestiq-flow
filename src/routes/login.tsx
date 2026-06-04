@@ -188,6 +188,37 @@ function LoginPage() {
               {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
             </button>
           </form>
+
+          {/* Mobile benefits */}
+          <div className="md:hidden mt-10 pt-8 border-t" style={{ borderColor: "rgba(15,44,38,0.12)" }}>
+            <ul className="space-y-4">
+              {[
+                { Icon: FileText, label: "Prontuário visual com fotos e mapeamento" },
+                { Icon: CalendarCheck, label: "Seus dados são seus, exporte quando quiser" },
+                { Icon: Wallet, label: "Financeiro por procedimento, sem planilha" },
+              ].map(({ Icon, label }) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-3"
+                  style={{
+                    color: "#1A1A1A",
+                    fontFamily: "'Inter', system-ui, sans-serif",
+                    fontWeight: 400,
+                    fontSize: "14px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <span
+                    className="inline-flex w-9 h-9 rounded-full items-center justify-center shrink-0"
+                    style={{ backgroundColor: "rgba(195,154,84,0.14)", color: GOLD }}
+                  >
+                    <Icon className="w-4 h-4" strokeWidth={1.5} />
+                  </span>
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
