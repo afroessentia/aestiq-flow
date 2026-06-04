@@ -38,8 +38,8 @@ export function AppShell({ title, children, right }: { title: string; children: 
   }, [user, path]);
 
   const logoNode = (
-    <span className="inline-flex items-center justify-center w-8 h-8 rounded-md overflow-hidden" style={{ color: "#C39A54" }}>
-      {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" /> : <img src="/src/assets/logo-monogram.svg" alt="" className="w-full h-full object-contain" />}
+    <span className="inline-flex items-center justify-center w-9 h-9 overflow-hidden" style={{ color: "#C39A54" }}>
+      {logoUrl ? <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" /> : <img src={logoMonogram} alt="" className="w-full h-full object-contain" />}
     </span>
   );
 
