@@ -117,9 +117,26 @@ function LoginPage() {
       {/* Right column — form */}
       <div className="flex-1 flex flex-col justify-center px-6 md:px-16 py-10" style={{ backgroundColor: IVORY }}>
         <div className="w-full max-w-md md:max-w-[420px] mx-auto">
-          <div className="mb-10 text-center md:hidden" style={{ color: PETROLEUM }}>
-            <img src={logoMonogram} alt="" className="w-16 h-16 mx-auto mb-2" style={{ color: GOLD }} />
-            <h1 className="text-3xl tracking-[0.3em]" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>AESTIQ</h1>
+          {/* Mobile header — logo + slogan */}
+          <div className="mb-10 text-center md:hidden">
+            <img
+              src={aestiqLogoAsset.url}
+              alt="AESTIQ"
+              className="w-[200px] h-auto object-contain mx-auto mb-5"
+            />
+            <p
+              className="px-4"
+              style={{
+                color: GOLD,
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontStyle: "italic",
+                fontWeight: 500,
+                fontSize: "20px",
+                lineHeight: 1.35,
+              }}
+            >
+              O essencial da estética,<br />do prontuário ao retorno
+            </p>
           </div>
 
           <h2
@@ -171,6 +188,37 @@ function LoginPage() {
               {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
             </button>
           </form>
+
+          {/* Mobile benefits */}
+          <div className="md:hidden mt-10 pt-8 border-t" style={{ borderColor: "rgba(15,44,38,0.12)" }}>
+            <ul className="space-y-4">
+              {[
+                { Icon: FileText, label: "Prontuário visual com fotos e mapeamento" },
+                { Icon: CalendarCheck, label: "Seus dados são seus, exporte quando quiser" },
+                { Icon: Wallet, label: "Financeiro por procedimento, sem planilha" },
+              ].map(({ Icon, label }) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-3"
+                  style={{
+                    color: "#1A1A1A",
+                    fontFamily: "'Inter', system-ui, sans-serif",
+                    fontWeight: 400,
+                    fontSize: "14px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <span
+                    className="inline-flex w-9 h-9 rounded-full items-center justify-center shrink-0"
+                    style={{ backgroundColor: "rgba(195,154,84,0.14)", color: GOLD }}
+                  >
+                    <Icon className="w-4 h-4" strokeWidth={1.5} />
+                  </span>
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
