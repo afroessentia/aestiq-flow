@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus, ChevronLeft, ChevronRight, MessageCircle, Save } from "lucide-react";
 import { AuthGate } from "@/components/AuthGate";
 import { AppShell } from "@/components/AppShell";
-import { Button, Card, EmptyState, Field } from "@/components/u";
+import { Button, EmptyState, Field } from "@/components/u";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDate, fmtTime, waLink } from "@/lib/format";
