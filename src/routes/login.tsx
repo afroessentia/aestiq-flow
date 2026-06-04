@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button, Input, Field } from "@/components/u";
 import { toast } from "sonner";
 import { FileText, CalendarCheck, Wallet } from "lucide-react";
-import logoAestiq from "@/assets/logo-aestiq.svg";
 import logoMonogram from "@/assets/logo-monogram.svg";
+import aestiqLogoAsset from "@/assets/aestiq-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -61,29 +61,51 @@ function LoginPage() {
     <div className="min-h-dvh flex flex-col md:flex-row" style={{ backgroundColor: IVORY }}>
       {/* Left column — desktop only */}
       <aside
-        className="hidden md:flex md:w-1/2 md:flex-col md:items-start md:justify-center md:px-16 md:py-16"
-        style={{ backgroundColor: PETROLEUM, color: GOLD }}
+        className="hidden md:flex md:w-1/2 md:flex-col md:items-center md:justify-center md:px-16 md:py-16"
+        style={{ backgroundColor: PETROLEUM }}
       >
-        <div className="max-w-sm w-full">
-          <img src={logoAestiq} alt="AESTIQ" className="w-40 mb-10" style={{ color: GOLD }} />
+        <div className="max-w-md w-full flex flex-col items-center">
+          <img
+            src={aestiqLogoAsset.url}
+            alt="AESTIQ"
+            className="w-[280px] h-auto object-contain mb-12"
+          />
           <p
-            className="text-base mb-12 leading-relaxed"
-            style={{ color: "rgba(250,248,245,0.85)", fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+            className="text-center mb-14 px-2"
+            style={{
+              color: GOLD,
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontStyle: "italic",
+              fontWeight: 500,
+              fontSize: "28px",
+              lineHeight: 1.3,
+            }}
           >
-            O essencial da estética, do prontuário ao retorno.
+            O essencial da estética,<br />do prontuário ao retorno
           </p>
-          <ul className="space-y-5">
+          <ul className="space-y-6 w-full max-w-sm">
             {[
               { Icon: FileText, label: "Prontuário visual com fotos e mapeamento" },
               { Icon: CalendarCheck, label: "Seus dados são seus, exporte quando quiser" },
               { Icon: Wallet, label: "Financeiro por procedimento, sem planilha" },
             ].map(({ Icon, label }) => (
-              <li key={label} className="flex items-center gap-4 text-sm" style={{ color: "rgba(250,248,245,0.9)" }}>
+              <li
+                key={label}
+                className="flex items-center gap-4"
+                style={{
+                  color: "rgba(250,248,245,0.92)",
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                  fontWeight: 300,
+                  fontSize: "16px",
+                  lineHeight: 1.5,
+                  letterSpacing: "0.01em",
+                }}
+              >
                 <span
-                  className="inline-flex w-10 h-10 rounded-full items-center justify-center shrink-0"
-                  style={{ backgroundColor: "rgba(195,154,84,0.15)", color: GOLD }}
+                  className="inline-flex w-11 h-11 rounded-full items-center justify-center shrink-0"
+                  style={{ backgroundColor: "rgba(195,154,84,0.12)", color: GOLD }}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5" strokeWidth={1.5} />
                 </span>
                 {label}
               </li>
