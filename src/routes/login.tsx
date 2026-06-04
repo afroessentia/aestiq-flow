@@ -6,10 +6,15 @@ import { Button, Input, Field } from "@/components/u";
 import { toast } from "sonner";
 import { FileText, CalendarCheck, Wallet } from "lucide-react";
 import logoAestiq from "@/assets/logo-aestiq.svg";
+import logoMonogram from "@/assets/logo-monogram.svg";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
+
+const GOLD = "#C39A54";
+const PETROLEUM = "#0F2C26";
+const IVORY = "#FAF8F5";
 
 function LoginPage() {
   const { user, loading } = useAuth();
@@ -53,105 +58,80 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col md:flex-row" style={{ backgroundColor: "#FAFAF9" }}>
+    <div className="min-h-dvh flex flex-col md:flex-row" style={{ backgroundColor: IVORY }}>
       {/* Left column — desktop only */}
       <aside
-        className="hidden md:flex md:w-1/2 md:flex-col md:items-center md:justify-center md:px-12 md:py-16 md:text-white"
-        style={{ backgroundColor: "#1A2E35" }}
+        className="hidden md:flex md:w-1/2 md:flex-col md:items-start md:justify-center md:px-16 md:py-16"
+        style={{ backgroundColor: PETROLEUM, color: GOLD }}
       >
         <div className="max-w-sm w-full">
-          <div className="w-20 h-20 rounded-full mb-6 flex items-center justify-center overflow-hidden" style={{ backgroundColor: "#2A9D8F" }}>
-            <img src={logoAestiq} alt="AESTIQ" className="w-14 h-14 object-contain" />
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight">AESTIQ</h2>
-          <p className="text-sm text-white/70 mt-2 mb-10">
-            Gestão para clínicas de estética avançada
+          <img src={logoAestiq} alt="AESTIQ" className="w-40 mb-10" style={{ color: GOLD }} />
+          <p
+            className="text-base mb-12 leading-relaxed"
+            style={{ color: "rgba(250,248,245,0.85)", fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+          >
+            O essencial da estética, do prontuário ao retorno.
           </p>
-          <ul className="space-y-4">
-            <li className="flex items-center gap-3 text-sm">
-              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center shrink-0" style={{ backgroundColor: "#2A9D8F" }}>
-                <FileText className="w-4 h-4" />
-              </span>
-              Prontuário visual com fotos e mapeamento
-            </li>
-            <li className="flex items-center gap-3 text-sm">
-              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center shrink-0" style={{ backgroundColor: "#2A9D8F" }}>
-                <CalendarCheck className="w-4 h-4" />
-              </span>
-              Seus dados são seus, exporte quando quiser
-            </li>
-            <li className="flex items-center gap-3 text-sm">
-              <span className="inline-flex w-9 h-9 rounded-md items-center justify-center shrink-0" style={{ backgroundColor: "#2A9D8F" }}>
-                <Wallet className="w-4 h-4" />
-              </span>
-              Financeiro por procedimento, sem planilha
-            </li>
+          <ul className="space-y-5">
+            {[
+              { Icon: FileText, label: "Prontuário visual com fotos e mapeamento" },
+              { Icon: CalendarCheck, label: "Seus dados são seus, exporte quando quiser" },
+              { Icon: Wallet, label: "Financeiro por procedimento, sem planilha" },
+            ].map(({ Icon, label }) => (
+              <li key={label} className="flex items-center gap-4 text-sm" style={{ color: "rgba(250,248,245,0.9)" }}>
+                <span
+                  className="inline-flex w-10 h-10 rounded-full items-center justify-center shrink-0"
+                  style={{ backgroundColor: "rgba(195,154,84,0.15)", color: GOLD }}
+                >
+                  <Icon className="w-4 h-4" />
+                </span>
+                {label}
+              </li>
+            ))}
           </ul>
         </div>
       </aside>
 
       {/* Right column — form */}
-      <div className="flex-1 flex flex-col justify-center px-6 md:px-12 py-10 md:bg-white">
+      <div className="flex-1 flex flex-col justify-center px-6 md:px-16 py-10" style={{ backgroundColor: IVORY }}>
         <div className="w-full max-w-md md:max-w-[420px] mx-auto">
-          <div className="mb-10 text-center md:hidden">
-            <img src={logoAestiq} alt="AESTIQ" className="w-24 h-24 mx-auto mb-4 object-contain" />
-            <h1 className="text-3xl font-bold tracking-tight text-dark">AESTIQ</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Gestão para clínicas de estética avançada
-            </p>
+          <div className="mb-10 text-center md:hidden" style={{ color: PETROLEUM }}>
+            <img src={logoMonogram} alt="" className="w-16 h-16 mx-auto mb-2" style={{ color: GOLD }} />
+            <h1 className="text-3xl tracking-[0.3em]" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>AESTIQ</h1>
           </div>
+
+          <h2
+            className="text-3xl mb-1"
+            style={{ fontFamily: "var(--font-serif)", color: PETROLEUM, fontWeight: 500 }}
+          >
+            Entrar
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6">Acesse sua conta para continuar</p>
 
           <form onSubmit={submit} className="space-y-4">
             {mode === "signup" && (
               <Field label="Nome completo">
-                <Input
-                  type="text"
-                  required
-                  autoComplete="name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Seu nome completo"
-                />
+                <Input type="text" required autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome completo" />
               </Field>
             )}
             <Field label="E-mail">
-              <Input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-              />
+              <Input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
             </Field>
             <Field label="Senha">
-              <Input
-                type="password"
-                required
-                minLength={6}
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
+              <Input type="password" required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
             </Field>
 
             <div className="flex justify-end -mt-2">
               <button
                 type="button"
                 onClick={async () => {
-                  if (!email) {
-                    toast.error("Informe seu e-mail para redefinir a senha");
-                    return;
-                  }
-                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin,
-                  });
+                  if (!email) { toast.error("Informe seu e-mail para redefinir a senha"); return; }
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
                   if (error) toast.error(error.message);
                   else toast.success("E-mail de redefinição enviado");
                 }}
                 className="text-xs font-medium hover:underline"
-                style={{ color: "#2A9D8F" }}
+                style={{ color: GOLD }}
               >
                 Esqueceu sua senha?
               </button>
