@@ -42,7 +42,11 @@ function AssinarPage() {
           Para acessar o Aestiq, você precisa de uma assinatura ativa.
         </p>
         <Button asChild className="w-full">
-          <a href={STRIPE_CHECKOUT_URL} target="_blank" rel="noreferrer">
+          <a
+            href={`${STRIPE_CHECKOUT_URL}${STRIPE_CHECKOUT_URL.includes("?") ? "&" : "?"}client_reference_id=${encodeURIComponent(user.id)}&prefilled_email=${encodeURIComponent(user.email ?? "")}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             Assinar agora
           </a>
         </Button>
