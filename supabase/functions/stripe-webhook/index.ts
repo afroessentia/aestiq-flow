@@ -1,9 +1,9 @@
 // Stripe webhook handler — updates public.subscriptions
 // Events handled:
-//   customer.subscription.created
-//   customer.subscription.updated
-//   customer.subscription.deleted
+//   checkout.session.completed
+//   customer.subscription.created/updated/deleted
 //   invoice.payment_failed
+// Also logs every received event to public.webhook_events for debugging.
 
 import Stripe from "https://esm.sh/stripe@16.12.0?target=denonext";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -25,10 +25,30 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "content-type, stripe-signature",
 };
 
+async function logEvent(params: {
+  event_id?: string | null;
+  event_type?: string | null;
+  status: string;
+  error_message?: string | null;
+  payload?: unknown;
+}) {
+  try {
+    await supabase.from("webhook_events").insert({
+      source: "stripe",
+      event_id: params.event_id ?? null,
+      event_type: params.event_type ?? null,
+      status: params.status,
+      error_message: params.error_message ?? null,
+      payload: params.payload ?? null,
+    });
+  } catch (e) {
+    console.error("Failed to log webhook event:", e);
+  }
+}
+
 async function upsertSubscription(sub: Stripe.Subscription, statusOverride?: string) {
   const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
-  // Resolve user_id: prefer existing row mapping, fallback to customer metadata
   let userId: string | null = null;
   const { data: existing } = await supabase
     .from("subscriptions")
@@ -45,8 +65,7 @@ async function upsertSubscription(sub: Stripe.Subscription, statusOverride?: str
   }
 
   if (!userId) {
-    console.error("No user_id found for customer", customerId);
-    return;
+    throw new Error(`No user_id found for customer ${customerId}`);
   }
 
   const { error } = await supabase.from("subscriptions").upsert(
@@ -61,7 +80,7 @@ async function upsertSubscription(sub: Stripe.Subscription, statusOverride?: str
     },
     { onConflict: "user_id" },
   );
-  if (error) console.error("upsert error:", error);
+  if (error) throw new Error(`upsert error: ${error.message}`);
 }
 
 Deno.serve(async (req) => {
@@ -76,7 +95,9 @@ Deno.serve(async (req) => {
   try {
     event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
   } catch (err) {
-    console.error("Signature verification failed:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Signature verification failed:", msg);
+    await logEvent({ status: "signature_failed", error_message: msg, payload: { body: body.slice(0, 2000) } });
     return new Response("Invalid signature", { status: 401 });
   }
 
@@ -87,7 +108,6 @@ Deno.serve(async (req) => {
         const userId = session.client_reference_id ?? (session.metadata?.user_id as string | undefined);
         const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
         if (userId && customerId) {
-          // Persist mapping on the Stripe customer so future events resolve user_id
           await stripe.customers.update(customerId, { metadata: { user_id: userId } });
         }
         if (session.subscription) {
@@ -111,9 +131,24 @@ Deno.serve(async (req) => {
       }
       default:
         console.log("Unhandled event:", event.type);
+        await logEvent({ event_id: event.id, event_type: event.type, status: "ignored", payload: event });
+        return new Response(JSON.stringify({ received: true }), {
+          headers: { ...corsHeaders, "content-type": "application/json" },
+        });
     }
+
+    await logEvent({ event_id: event.id, event_type: event.type, status: "processed", payload: event });
   } catch (err) {
-    console.error("Handler error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error("Handler error:", msg);
+    await logEvent({
+      event_id: event.id,
+      event_type: event.type,
+      status: "error",
+      error_message: stack ? `${msg}\n${stack}` : msg,
+      payload: event,
+    });
     return new Response("Handler error", { status: 500 });
   }
 
