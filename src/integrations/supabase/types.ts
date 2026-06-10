@@ -455,6 +455,39 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_id: string | null
+          event_type: string | null
+          id: string
+          payload: Json | null
+          source: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_id?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_id?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json | null
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       work_hours: {
         Row: {
           enabled: boolean
