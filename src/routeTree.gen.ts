@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WebhookEventsRouteImport } from './routes/webhook-events'
 import { Route as RetornosRouteImport } from './routes/retornos'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
@@ -24,6 +25,11 @@ import { Route as ClientesIdProcedimentoRouteImport } from './routes/clientes.$i
 import { Route as ClientesIdAnamneseRouteImport } from './routes/clientes.$id.anamnese'
 import { Route as ClientesIdSessoesSidRouteImport } from './routes/clientes.$id.sessoes.$sid'
 
+const WebhookEventsRoute = WebhookEventsRouteImport.update({
+  id: '/webhook-events',
+  path: '/webhook-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RetornosRoute = RetornosRouteImport.update({
   id: '/retornos',
   path: '/retornos',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/retornos': typeof RetornosRoute
+  '/webhook-events': typeof WebhookEventsRoute
   '/agendamentos/novo': typeof AgendamentosNovoRoute
   '/clientes/$id': typeof ClientesIdRouteWithChildren
   '/clientes/$id/anamnese': typeof ClientesIdAnamneseRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/retornos': typeof RetornosRoute
+  '/webhook-events': typeof WebhookEventsRoute
   '/agendamentos/novo': typeof AgendamentosNovoRoute
   '/clientes/$id': typeof ClientesIdRouteWithChildren
   '/clientes/$id/anamnese': typeof ClientesIdAnamneseRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/financeiro': typeof FinanceiroRoute
   '/login': typeof LoginRoute
   '/retornos': typeof RetornosRoute
+  '/webhook-events': typeof WebhookEventsRoute
   '/agendamentos/novo': typeof AgendamentosNovoRoute
   '/clientes/$id': typeof ClientesIdRouteWithChildren
   '/clientes/$id/anamnese': typeof ClientesIdAnamneseRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/login'
     | '/retornos'
+    | '/webhook-events'
     | '/agendamentos/novo'
     | '/clientes/$id'
     | '/clientes/$id/anamnese'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/login'
     | '/retornos'
+    | '/webhook-events'
     | '/agendamentos/novo'
     | '/clientes/$id'
     | '/clientes/$id/anamnese'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/login'
     | '/retornos'
+    | '/webhook-events'
     | '/agendamentos/novo'
     | '/clientes/$id'
     | '/clientes/$id/anamnese'
@@ -205,11 +217,19 @@ export interface RootRouteChildren {
   FinanceiroRoute: typeof FinanceiroRoute
   LoginRoute: typeof LoginRoute
   RetornosRoute: typeof RetornosRoute
+  WebhookEventsRoute: typeof WebhookEventsRoute
   AgendamentosNovoRoute: typeof AgendamentosNovoRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/webhook-events': {
+      id: '/webhook-events'
+      path: '/webhook-events'
+      fullPath: '/webhook-events'
+      preLoaderRoute: typeof WebhookEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/retornos': {
       id: '/retornos'
       path: '/retornos'
@@ -349,8 +369,19 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceiroRoute: FinanceiroRoute,
   LoginRoute: LoginRoute,
   RetornosRoute: RetornosRoute,
+  WebhookEventsRoute: WebhookEventsRoute,
   AgendamentosNovoRoute: AgendamentosNovoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
